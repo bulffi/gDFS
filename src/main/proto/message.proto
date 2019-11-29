@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.f4.proto";
+option java_outer_classname = "helloWorldProto";
+option objc_class_prefix = "HLW";
+
+package proto;
+
+service Slave{
+    rpc writeToBlock(WriteRequest) returns (WriteReply) {}
+}
+
+message WriteRequest{
+    int32 blockID = 1;
+    string content = 2;
+    bytes block = 3;
+}
+
+message WriteReply{
+    int32 status = 1;
+}

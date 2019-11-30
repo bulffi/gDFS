@@ -20,6 +20,8 @@ message WriteRequest{
 
 message WriteReply{
     int32 status = 1;
+    // 0 失败
+    // 1 成功
 }
 
 message QueryBlockIDRequest{

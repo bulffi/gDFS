@@ -1,4 +1,3 @@
-import com.f4.proto.*;
 import io.grpc.ManagedChannel;
 
 import java.util.logging.Logger;

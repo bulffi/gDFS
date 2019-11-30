@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.f4.proto";
+option java_outer_classname = "helloWorldProto";
+option objc_class_prefix = "HLW";
+
+package proto;
+
+service Slave{
+    rpc writeToBlock (WriteRequest) returns (WriteReply) {}
+    rpc getAvailableBlockID (QueryBlockIDRequest) returns (QueryBlockIDReply) {}
+    rpc readBlockByID (ReadBlockRequest) returns (ReadBlockReply) {}
+}
+
+message WriteRequest{
+    int64 blockID = 1;
+    bytes block = 2;
+}
+
+message WriteReply{
+    int32 status = 1;
+}
+
+message QueryBlockIDRequest{
+
+}
+
+message QueryBlockIDReply {
+    int64 blockID = 1;
+}
+
+message ReadBlockRequest {
+    int64 blockID = 1;
+}
+
+message ReadBlockReply {
+    bytes block = 1;
+}

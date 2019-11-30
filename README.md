@@ -1,7 +1,15 @@
 # gDFS
 
-项目结构还没有完全搞清楚，有感觉直接修改就行。
+## 项目结构
 
+gDFS 下有三个子模块，分别是
+
+- proto
+- nameNode
+- dataNode
+
+proto 模块中定义了 gRPC 的协议，在 Compile 之后会得到必要的类。因此，nameNode 以及 dataNode 都依赖 proto 模块。
+Package 步骤会把依赖全部打包，所以速度较慢。
 ## 迭代目标
 
 ### 第一轮
@@ -42,7 +50,7 @@ void read(String nameInGDFS, URL targetLocation);
 
 ### slave
 
-在第一轮迭代，slave 作为 server，接受 master 的调用。初步确定有以下三个方法，具体实现参看代码 /src/main/proto（所有 gRPC 的文件都只能放在这里，否则是无效的）
+在第一轮迭代，slave 作为 server，接受 master 的调用。初步确定有以下三个方法，具体实现参看 proto 模块 
 
 ```protobuf
 service Slave{

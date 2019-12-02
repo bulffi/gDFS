@@ -27,8 +27,14 @@ public class FileServer {
 
     // 初始化 查找现在能写的最大的 ID 是多少
     public FileServer(ServerBuilder<?> serverBuilder,int port,CountDownLatch latch){
+        this.port = port;
+        mainThreadLatch = latch;
+        server = serverBuilder.addService(new Slave()).build();
         File dataDir = new File("dataNode/" +
                 "src/main/resources/data");
+        if(!dataDir.exists()){
+            dataDir.mkdir();
+        }
         File[] fileList = dataDir.listFiles();
         long max = 0;
         assert fileList != null;
@@ -39,9 +45,6 @@ public class FileServer {
             }
         }
         availableBlockID = new AtomicLong(max + 1);
-        this.port = port;
-        mainThreadLatch = latch;
-        server = serverBuilder.addService(new Slave()).build();
     }
 
     public FileServer(int port, CountDownLatch latch){

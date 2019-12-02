@@ -2,7 +2,21 @@ syntax = "proto3";
 
 option java_multiple_files = true;
 option java_package = "com.f4.proto.nn";
-option java_outer_classname = "RouteGuideProto";
-option objc_class_prefix = "RTG";
+option java_outer_classname = "NameNodeProto";
+option objc_class_prefix = "NN";
 
 package nn;
+
+service Master{
+    rpc register(RegisterRequest) returns (RegisterResponse) {}
+}
+
+message RegisterResponse{
+    bool status = 1;
+    repeated string peers = 2;
+}
+
+message RegisterRequest{
+    string host = 1;
+    string ip = 2;
+}

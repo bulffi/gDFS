@@ -15,6 +15,7 @@ public class dataNodeStarter {
     public static void main(String[] args) throws InterruptedException, IOException {
         // 防止主线程退出
         final CountDownLatch latch = new CountDownLatch(1);
+
         // 把 Server 放到新线程里面去跑
         Thread serverThread = new Thread(){
             @Override

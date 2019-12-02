@@ -5,11 +5,13 @@ import com.google.protobuf.ByteString;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import java.io.*;
+import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.logging.Logger;
+
 
 /**
  * @program: gDFS
@@ -18,7 +20,7 @@ import java.util.logging.Logger;
  * @create: 2019/11/30
  **/
 public class FileServer {
-    private static final Logger logger = Logger.getLogger(FileServer.class.getName());
+    private static final Logger logger = LogManager.getLogger(FileServer.class);
 
     private final int port;
     private final Server server;
@@ -26,29 +28,44 @@ public class FileServer {
     private final AtomicLong availableBlockID;
 
     // 初始化 查找现在能写的最大的 ID 是多少
-    public FileServer(ServerBuilder<?> serverBuilder,int port,CountDownLatch latch){
-        this.port = port;
+    public FileServer(CountDownLatch latch) throws IOException {
+        Properties properties = new Properties();
+        try {
+            properties.load(FileServer.class.getResourceAsStream("/dataNodeConfig.properties"));
+        }catch (IOException e){
+            logger.error("Fail to read dataNodeConfig.properties. Data node won't start.");
+            throw e;
+        }
+        try {
+            this.port = Integer.parseInt((String) properties.get("dataNode.port"));
+        }catch (NumberFormatException e){
+            logger.error("Invalid dataNode.port config");
+            throw e;
+        }
         mainThreadLatch = latch;
+        ServerBuilder<?> serverBuilder = ServerBuilder.forPort(this.port);
         server = serverBuilder.addService(new Slave()).build();
-        File dataDir = new File("dataNode/" +
-                "src/main/resources/data");
+        File dataDir = new File((String)properties.get("dataNode.dataDir"));
         if(!dataDir.exists()){
-            dataDir.mkdir();
+            logger.error("Please create data dir first: " + dataDir.getName());
+            throw new FileNotFoundException("Data dir not found.");
         }
         File[] fileList = dataDir.listFiles();
         long max = 0;
         assert fileList != null;
-        for (File f : fileList) {
-            long tempt = Long.parseLong(f.getName());
-            if (tempt > max){
-                max = tempt;
+        try {
+            for (File f : fileList) {
+                long tempt = Long.parseLong(f.getName());
+                if (tempt > max){
+                    max = tempt;
+                }
             }
+        }catch (NumberFormatException e){
+            logger.error("Data dir contains illegal file name: " + e.getMessage());
+            throw e;
         }
+        logger.info("There is already " + max +" blocks in the data dir. Start from block #" + (max+1)) ;
         availableBlockID = new AtomicLong(max + 1);
-    }
-
-    public FileServer(int port, CountDownLatch latch){
-        this(ServerBuilder.forPort(port), port,latch);
     }
 
     public void start() throws IOException, InterruptedException {
@@ -57,9 +74,9 @@ public class FileServer {
         Runtime.getRuntime().addShutdownHook(new Thread(){
             @Override
             public void run(){
-                logger.warning("server begins to shut down");
+                logger.warn("server begins to shut down");
                 FileServer.this.stop();
-                logger.warning("server shut down");
+                logger.warn("server shut down");
             }
         });
         blockUntilShutdown();

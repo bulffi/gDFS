@@ -1,11 +1,11 @@
 syntax = "proto3";
 
 option java_multiple_files = true;
-option java_package = "com.f4.proto";
+option java_package = "com.f4.proto.dn";
 option java_outer_classname = "helloWorldProto";
 option objc_class_prefix = "HLW";
 
-package proto;
+package dn;
 
 service Slave{
     rpc writeToBlock (WriteRequest) returns (WriteReply) {}

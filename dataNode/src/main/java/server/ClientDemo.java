@@ -1,6 +1,6 @@
 package server;
 
-import com.f4.proto.*;
+import com.f4.proto.dn.*;
 import com.google.protobuf.ByteString;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;

@@ -21,14 +21,9 @@ public class DataNodeRecorder {
             BufferedReader reader = new BufferedReader(new FileReader("nameNode/src/main/resources/workers"));
             String slave;
             while((slave = reader.readLine()) != null){
-                String[] conf = slave.split(" ");
+                String[] conf = slave.split(":");
                 if(conf.length == 2) {
-                    ALL_DATANODE.add(conf[0]);
-                    try {
-                        CLIENT_MAP.put(conf[0], new FileOperationClient(conf[0], Integer.parseInt(conf[1])));
-                    }catch (NumberFormatException e){
-                        e.printStackTrace();
-                    }
+                    ALL_DATANODE.add(slave);
                 }
             }
         } catch (FileNotFoundException e) {
@@ -40,22 +35,43 @@ public class DataNodeRecorder {
 
     public void addActiveDataNode(String dn){
         ACTIVE_DATANODE.add(dn);
+        String[] addr = dn.split(":");
+        try {
+            CLIENT_MAP.put(dn, new FileOperationClient(addr[0], Integer.parseInt(addr[1])));
+        }catch (NumberFormatException e){
+            e.printStackTrace();
+        }
     }
 
     public void removeActiveDataNode(String dn){
     }
 
     public List<String> getWriteDataNodes(int duplicationNum){
-        ALL_DATANODE.sort(new Comparator<String>() {
+        if(ACTIVE_DATANODE.size() < duplicationNum){
+            return null;
+        }
+        ACTIVE_DATANODE.sort(new Comparator<String>() {
             @Override
             public int compare(String s, String t1) {
                 return new Random(new Date().getTime()).nextInt(100) - 50;
             }
         });
-        return ALL_DATANODE.subList(0, duplicationNum);
+        return ACTIVE_DATANODE.subList(0, duplicationNum);
     }
 
     public FileOperationClient getClient(String dn){
         return CLIENT_MAP.get(dn);
+    }
+
+    public boolean isExist(String ele){
+        return ALL_DATANODE.contains(ele);
+    }
+
+    public boolean isActive(String ele){
+        return ACTIVE_DATANODE.contains(ele);
+    }
+
+    public String getActiveSlave(int index){
+        return ACTIVE_DATANODE.get(index);
     }
 }

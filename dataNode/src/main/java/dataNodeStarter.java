@@ -1,10 +1,8 @@
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import server.ClientDemo;
 import server.FileServer;
 
 import java.io.IOException;
-import java.util.Scanner;
 import java.util.concurrent.CountDownLatch;
 
 /**

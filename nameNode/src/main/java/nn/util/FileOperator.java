@@ -1,14 +1,14 @@
 package nn.util;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.logging.Logger;
 import nn.client.FileOperationClient;
 import nn.dao.MetaDataDao;
 import nn.message.BlockInfo;
 import nn.message.WriteStatus;
 
 import java.io.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.logging.Logger;
 
 public class FileOperator {
     private static final Logger LOGGER = Logger.getLogger(FileOperator.class.getName());
@@ -33,12 +33,13 @@ public class FileOperator {
         try {
             BufferedInputStream buffer = new BufferedInputStream(new FileInputStream(file));
             int index = 0;
+            List<String> dns = recorder.getWriteDataNodes(duplicationNum);
             while(buffer.read(block) != -1){
                 dao.insertFileBlock(file.getName(), index);
-                List<String> dns = recorder.getWriteDataNodes(duplicationNum);
                 for(int i = 0; i < duplicationNum; i++){
                     String dnToWrite = dns.get(i);
-                    WriteStatus status = recorder.getClient(dnToWrite).upload(block);
+                    FileOperationClient client = recorder.getClient(dnToWrite);
+                    WriteStatus status = client.upload(block);
                     LOGGER.info(status.getBlockID() + ", " + status.isOK());
                     dao.insertBlockDuplcation(index, dnToWrite, status.getBlockID());
                 }

@@ -9,13 +9,12 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.List;
+import java.util.Scanner;
 import java.util.concurrent.CountDownLatch;
 
 public class NNApp {
     public static void main(String[] args){
         FileOperator divider = new FileOperator(50 * 1204, 3);
-        //divider.uploadFile(new File("dataNode/src/main/resources/uploadTest/test.png"));
-        //divider.downloadFile("test.png", "dataNode/src/main/resources/downloadTest/saturn.png");
         // 防止主线程退出
         final CountDownLatch latch = new CountDownLatch(1);
 
@@ -31,5 +30,10 @@ public class NNApp {
                 }
             }
         }.start();
+
+        Scanner scanner = new Scanner(System.in);
+        String order = scanner.nextLine();
+        divider.uploadFile(new File("dataNode/src/main/resources/uploadTest/test.png"));
+        divider.downloadFile("test.png", "dataNode/src/main/resources/downloadTest/saturn.png");
     }
 }

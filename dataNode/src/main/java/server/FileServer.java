@@ -26,6 +26,7 @@ public class FileServer {
     private final Server server;
     private final CountDownLatch mainThreadLatch;
     private final AtomicLong availableBlockID;
+    private final String BLOCKPATH;
 
     private String getPath()
     {
@@ -54,6 +55,7 @@ public class FileServer {
             throw e;
         }
         try {
+            this.BLOCKPATH = (String) properties.get("dataNode.Dir");
             this.port = Integer.parseInt((String) properties.get("dataNode.port"));
         }catch (NumberFormatException e){
             logger.error("Invalid dataNode.port config");
@@ -118,8 +120,7 @@ public class FileServer {
         @Override
         public void writeToBlock(WriteRequest request, StreamObserver<WriteReply> responseObserver)  {
             logger.info("master writes to # " + request.getBlockID());
-            File file = new File("dataNode/" +
-                    "src/main/resources/data/" + request.getBlockID());
+            File file = new File(BLOCKPATH + request.getBlockID());
             if(file.exists()){
                 responseObserver.onNext(WriteReply.newBuilder()
                         .setStatus(0).build());
@@ -154,8 +155,7 @@ public class FileServer {
         @Override
         public void readBlockByID(ReadBlockRequest request, StreamObserver<ReadBlockReply> responseObserver) {
             logger.info("master reads # " + request.getBlockID());
-            File file = new File("dataNode/" +
-                    "src/main/resources/data/" + request.getBlockID());
+            File file = new File(BLOCKPATH + request.getBlockID());
             if (file.exists()){
                 try {
                     BufferedInputStream inputStream = new BufferedInputStream(

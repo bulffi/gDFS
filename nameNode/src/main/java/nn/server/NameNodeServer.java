@@ -65,18 +65,19 @@ public class NameNodeServer {
         @Override
         public void register(RegisterRequest request, StreamObserver<RegisterResponse> responseObserver) {
             String host = request.getHost();
-            String ip = request.getIp();
-            if(DataNodeRecorder.ALL_DATANODE.contains(host) && !DataNodeRecorder.ACTIVE_DATANODE.contains(host)){
-                recorder.addActiveDataNode(host);
-            }else if(DataNodeRecorder.ALL_DATANODE.contains(ip) && !DataNodeRecorder.ACTIVE_DATANODE.contains(ip)){
-                recorder.addActiveDataNode(ip);
-            }else{
+            String port = request.getPort();
+            String addr = String.join(":", host, port);
+
+            if(recorder.isExist(addr) && !recorder.isActive(addr)){
+                recorder.addActiveDataNode(addr);
+            } else{
                 responseObserver.onNext(RegisterResponse.newBuilder().setStatus(false).build());
             }
             RegisterResponse.Builder builder = RegisterResponse.newBuilder().setStatus(true);
             for(int i = 0; i < DataNodeRecorder.ACTIVE_DATANODE.size(); i++){
-                responseObserver.onNext(builder.setPeers(i, DataNodeRecorder.ACTIVE_DATANODE.get(i)).build());
+               builder.addPeers(recorder.getActiveSlave(i));
             }
+            responseObserver.onNext(builder.build());
             responseObserver.onCompleted();
         }
     }

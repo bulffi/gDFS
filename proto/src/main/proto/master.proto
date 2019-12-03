@@ -18,5 +18,5 @@ message RegisterResponse{
 
 message RegisterRequest{
     string host = 1;
-    string ip = 2;
+    string port = 2;
 }

@@ -26,7 +26,7 @@ public class MetaDataDao {
         this.DB_NAME = database;
         this.USER = user;
         this.PASSWD = passwd;
-        this.DB_URL = "jdbc:mysql://" + HOST + ":" + String.valueOf(port) + "/" + DB_NAME + "?useSSL=false&serverTimeZone=UTC";
+        this.DB_URL = "jdbc:mysql://" + HOST + ":" + String.valueOf(port) + "/" + DB_NAME + "?useSSL=false&serverTimeZone=UTC?allowPublicKeyRetrieval=true";
     }
 
     private Connection getConn(){

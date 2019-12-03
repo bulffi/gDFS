@@ -7,35 +7,45 @@ option objc_class_prefix = "HLW";
 
 package dn;
 
+import "common.proto";
+
 service Slave{
+    rpc addNewDataNode (PeerInfo) returns (DataNodeReply) {}
+
     rpc writeToBlock (WriteRequest) returns (WriteReply) {}
-    rpc getAvailableBlockID (QueryBlockIDRequest) returns (QueryBlockIDReply) {}
     rpc readBlockByID (ReadBlockRequest) returns (ReadBlockReply) {}
+    rpc deleteBlockByID (DeleteBlockRequest) returns (DeleteBlockReply) {}
+
 }
 
-message WriteRequest{
-    int64 blockID = 1;
-    bytes block = 2;
+message DeleteBlockRequest{
+    repeated DeleteInfo nodesToDelete = 1;
 }
+message DeleteInfo{
+    string ip = 1;
+    repeated int64 blockID = 2;
+}
+message DeleteBlockReply{}
 
-message WriteReply{
+message DataNodeReply{
     int32 status = 1;
     // 0 失败
     // 1 成功
 }
 
-message QueryBlockIDRequest{
-
+message WriteRequest{
+    string fileName = 1;
+    int64 logicalBlockID = 2;
+    bytes block = 3;
+    repeated string nextNodesIPs = 4;
 }
-
-message QueryBlockIDReply {
-    int64 blockID = 1;
-}
+message WriteReply{}
 
 message ReadBlockRequest {
     int64 blockID = 1;
 }
-
 message ReadBlockReply {
     bytes block = 1;
 }
+
+

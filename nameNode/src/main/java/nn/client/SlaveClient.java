@@ -54,8 +54,7 @@ public class SlaveClient {
                     .setPort(port)
                     .build());
             ProtocolStringList list = response.getPeersList();
-            for (String message:list
-                 ) {
+            for (String message:list) {
                 System.out.println(message);
             }
         }catch (IOException e){

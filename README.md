@@ -56,9 +56,19 @@ void read(String nameInGDFS, URL targetLocation);
 
 ```protobuf
 service Slave{
-    rpc writeToBlock(WriteRequest) returns (WriteReply) {}
-    rpc getAvaibleBlockID(QueryRequest) returns (QueryReply) {}
-    rpc readABlock(ReadRequest) returns (ReadReply) {}
+    rpc addNewDataNode (PeerInfo) returns (DataNodeReply) {}
+
+    rpc writeToBlock (WriteRequest) returns (WriteReply) {}
+    rpc readBlockByID (ReadBlockRequest) returns (ReadBlockReply) {}
+    rpc deleteBlockByID (DeleteBlockRequest) returns (DeleteBlockReply) {}
+
+}
+service Master{
+    rpc register(RegisterRequest) returns (RegisterResponse) {}
+
+    // data node 之间互相写 写好了会告诉你{我是谁，我写了什么文件，写的逻辑块号码，写的物理块号码} 以便你了解哪里有什么
+    rpc reportDataWriteStatus(WriteReportRequest) returns (WriteReportReply) {}
+    rpc reportDataDeleteStatus(DeleteReportRequest) returns (DeleteReportReply) {}
 }
 ```
 

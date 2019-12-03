@@ -18,19 +18,14 @@ public class FileOperator {
     private int blockSize;
     private int duplicationNum;
     private byte[] block;
-    private final FileOperationClient client;
+    private final DataNodeRecorder recorder;
     private MetaDataDao dao;
-
-    {
-        HOST = "localhost";
-        PORT = 8980;
-    }
 
     public FileOperator(int blockSize, int duplicationNum) {
         this.blockSize = blockSize;
         this.duplicationNum = duplicationNum;
         block = new byte[blockSize];
-        client = new FileOperationClient(HOST, PORT);
+        recorder = new DataNodeRecorder();
         dao = new MetaDataDao("localhost", 3306, "DW", "root", "@Cmhdb_wsngp6");
     }
 
@@ -40,10 +35,12 @@ public class FileOperator {
             int index = 0;
             while(buffer.read(block) != -1){
                 dao.insertFileBlock(file.getName(), index);
+                List<String> dns = recorder.getWriteDataNodes(duplicationNum);
                 for(int i = 0; i < duplicationNum; i++){
-                    WriteStatus status = client.upload(block);
+                    String dnToWrite = dns.get(i);
+                    WriteStatus status = recorder.getClient(dnToWrite).upload(block);
                     LOGGER.info(status.getBlockID() + ", " + status.isOK());
-                    dao.insertBlockDuplcation(index, String.valueOf(i), status.getBlockID());
+                    dao.insertBlockDuplcation(index, dnToWrite, status.getBlockID());
                 }
                 index++;
             }
@@ -60,14 +57,7 @@ public class FileOperator {
         blockInfoList.sort(new Comparator<BlockInfo>() {
             @Override
             public int compare(BlockInfo blockInfo, BlockInfo t1) {
-                long delta = blockInfo.getBlockID() - t1.getBlockID();
-                if(delta < 0){
-                    return -1;
-                }else if(delta == 0){
-                    return 0;
-                }else {
-                    return 1;
-                }
+                return (int)(blockInfo.getBlockID() - t1.getBlockID());
             }
         });
         int blocks = dao.getFileBlockNum(srcPath);
@@ -77,7 +67,7 @@ public class FileOperator {
             for(int i = 0; i < blockInfoList.size(); i++){
                 BlockInfo blockInfo = blockInfoList.get(i);
                 if(blockInfo.getBlockID() == currentIndex){
-                    byte[] test =client.download(blockInfo.getDnID(), blockInfo.getDuplicationID());
+                    byte[] test =recorder.getClient(blockInfo.getDnID()).download(blockInfo.getDnID(), blockInfo.getDuplicationID());
                     buffer.write(test);
                     currentIndex++;
                 }

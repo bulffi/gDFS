@@ -69,15 +69,15 @@ public class NameNodeServer {
             String addr = String.join(":", host, port);
 
             if(recorder.isExist(addr) && !recorder.isActive(addr)){
+                RegisterResponse.Builder builder = RegisterResponse.newBuilder().setStatus(true);
+                for(int i = 0; i < DataNodeRecorder.ACTIVE_DATANODE.size(); i++){
+                    builder.addPeers(recorder.getActiveSlave(i));
+                }
                 recorder.addActiveDataNode(addr);
+                responseObserver.onNext(builder.build());
             } else{
                 responseObserver.onNext(RegisterResponse.newBuilder().setStatus(false).build());
             }
-            RegisterResponse.Builder builder = RegisterResponse.newBuilder().setStatus(true);
-            for(int i = 0; i < DataNodeRecorder.ACTIVE_DATANODE.size(); i++){
-               builder.addPeers(recorder.getActiveSlave(i));
-            }
-            responseObserver.onNext(builder.build());
             responseObserver.onCompleted();
         }
     }

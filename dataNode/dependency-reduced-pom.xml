@@ -57,6 +57,12 @@
             </goals>
             <configuration>
               <transformers>
+                <transformer>
+                  <mainClass>dataNodeStarter</mainClass>
+                  <manifestEntries>
+                    <Multi-Release>true</Multi-Release>
+                  </manifestEntries>
+                </transformer>
                 <transformer />
               </transformers>
             </configuration>

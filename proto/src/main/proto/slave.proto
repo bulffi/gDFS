@@ -10,6 +10,7 @@ package dn;
 import "common.proto";
 
 service Slave{
+    // 向朋友注册自己
     rpc addNewDataNode (PeerInfo) returns (DataNodeReply) {}
 
     rpc writeToBlock (WriteRequest) returns (WriteReply) {}

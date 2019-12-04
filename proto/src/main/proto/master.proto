@@ -26,7 +26,6 @@ message WriteReportRequest{
     // 我写在第几块的
     int64 physicalBlockID = 4;
 }
-
 message WriteReportReply{
     int32 status = 1;
     // 0 error
@@ -38,7 +37,6 @@ message DeleteReportRequest{
     string ip = 1;
     repeated int64 physicalBlockID = 2;
 }
-
 message DeleteReportReply{
     int32 status = 1;
     // 0 error
@@ -46,13 +44,11 @@ message DeleteReportReply{
 }
 
 
-message RegisterResponse{
-    bool status = 1;
-    repeated PeerInfo peers = 2;
-}
-
-
 message RegisterRequest{
     string host = 1;
     string port = 2;
+}
+message RegisterResponse{
+    bool status = 1;
+    repeated PeerInfo peers = 2;
 }

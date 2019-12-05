@@ -36,14 +36,19 @@ message WriteReportReply{
 
 message DeleteReportRequest{
     // 我的 IP
-    string ip = 1;
-    repeated int64 physicalBlockID = 2;
+    PeerInfo reporter = 1;
+    //repeated int64 physicalBlockID = 2;
+    repeated intWrapper physicalBlockIDWrapper = 2;
 }
 
 message DeleteReportReply{
     int32 status = 1;
     // 0 error
     // 1 OK
+}
+
+message intWrapper{
+    int64 physicalBlockID=1;
 }
 
 

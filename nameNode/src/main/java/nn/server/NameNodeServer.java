@@ -4,7 +4,6 @@ import com.f4.proto.common.PeerInfo;
 import com.f4.proto.nn.*;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
-import io.grpc.stub.ServerCalls;
 import io.grpc.stub.StreamObserver;
 import nn.dao.MetaDataDao;
 import nn.util.DataNodeRecorder;
@@ -85,6 +84,7 @@ public class NameNodeServer {
         @Override
         public void reportDataWriteStatus(WriteReportRequest request, StreamObserver<WriteReportReply> responseObserver) {
             dao.insertBlockDuplcation(request.getLogicalBlockID(), request.getReporter(), request.getPhysicalBlockID());
+            responseObserver.onCompleted();
         }
 
         @Override

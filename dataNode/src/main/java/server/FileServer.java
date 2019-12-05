@@ -376,9 +376,14 @@ public class FileServer {
             logger.info("Complete delete work.");
             logger.info("Report to master successful deleted block ids");
             DeleteReportRequest.Builder reportBuilder = DeleteReportRequest.newBuilder()
-                    .setIp(ip);
+                    .setReporter(PeerInfo.newBuilder()
+                            .setPort(port)
+                            .setIP(ip)
+                            .build());
             for (int i = 0; i < successIDs.size(); i++) {
-                reportBuilder.setPhysicalBlockID(i,successIDs.get(i));
+                reportBuilder.setPhysicalBlockIDWrapper(i, intWrapper.newBuilder()
+                        .setPhysicalBlockID(successIDs.get(i))
+                        .build());
             }
             DeleteReportRequest reportRequest = reportBuilder.build();
             DeleteReportReply reply = master.getStub().reportDataDeleteStatus(reportRequest);

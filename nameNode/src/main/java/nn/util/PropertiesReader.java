@@ -7,15 +7,34 @@ import java.util.logging.Logger;
 
 public class PropertiesReader {
     public static Properties PROPERTIES;
-    private static String PROPERTY_FILE_PATH = "conf/dataNodeConfig.properties";
+    private static String PROPERTY_FILE_PATH = new PropertiesReader().getPath() + "/conf/dataNodeConfig.properties";
     private static final Logger LOGGER = Logger.getLogger(PropertiesReader.class.getName());
     static{
         PROPERTIES = new Properties();
         try {
             PROPERTIES.load(new FileInputStream(PROPERTY_FILE_PATH));
-        }catch (IOException e2) {
+        }catch (IOException e) {
             LOGGER.warning("Fail to read dataNodeConfig.properties in " + PROPERTIES + " . Data node won't start.");
+            try {
+                PROPERTIES.load(new FileInputStream("dataNode/conf/dataNodeConfig.properties"));
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
         }
+    }
+
+    private String getPath() {
+        String path = this.getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
+        if(System.getProperty("os.name").contains("dows"))
+        {
+            path = path.substring(1,path.length());
+        }
+        if(path.contains("jar"))
+        {
+            path = path.substring(0,path.lastIndexOf("."));
+            return path.substring(0,path.lastIndexOf("/"));
+        }
+        return path.replace("target/classes/", "");
     }
 
     public static String getPropertyAsString(String propertyName){

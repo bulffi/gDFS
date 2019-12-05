@@ -33,10 +33,10 @@ public class FileOperator {
         try {
             BufferedInputStream buffer = new BufferedInputStream(new FileInputStream(file));
             int index = 0;
-            List<PeerInfo> dns = recorder.getWriteDataNodes(duplicationNum);
+            List<String> dns = recorder.getWriteDataNodes(duplicationNum);
             while(buffer.read(block) != -1){
                 dao.insertFileBlock(file.getName(), index);
-                PeerInfo dnToWrite = dns.get(0);
+                String dnToWrite = dns.get(0);
                 FileOperationClient client = recorder.getClient(dnToWrite);
                 client.writeToBlock(file.getName(), index, block, dns);
                 index++;
@@ -46,6 +46,8 @@ public class FileOperator {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
+        }catch (Exception e){
+            LOGGER.warning("Unknown errors!");
         }
     }
 
@@ -64,7 +66,7 @@ public class FileOperator {
             for(int i = 0; i < blockInfoList.size(); i++){
                 BlockInfo blockInfo = blockInfoList.get(i);
                 if(blockInfo.getBlockID() == currentIndex){
-                    byte[] test =recorder.getClient(blockInfo.getDnID()).readByID(blockInfo.getDuplicationID());
+                    byte[] test =recorder.getClient(blockInfo.getDnID().getIP()).readByID(blockInfo.getDuplicationID());
                     buffer.write(test);
                     currentIndex++;
                 }

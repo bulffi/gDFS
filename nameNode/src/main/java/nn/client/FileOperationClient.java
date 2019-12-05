@@ -32,16 +32,17 @@ public class FileOperationClient {
         channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
     }
 
-    public WriteReply writeToBlock(String fileName, int logicBlockID, byte[] bytes, List<PeerInfo> peers){
+    public WriteReply writeToBlock(String fileName, int logicBlockID, byte[] bytes, List<String> peers){
         logger.info("Write to block # " + logicBlockID);
 
         WriteReply reply = null;
         try {
             WriteRequest.Builder builder = WriteRequest.newBuilder();
             builder.setLogicalBlockID(logicBlockID).setFileName(fileName).setBlock(ByteString.copyFrom(bytes));
-            for (PeerInfo peer : peers
+            for (String peer : peers
                  ) {
-                builder.addNextNodesIPs(peer.getIP());
+                String[] addr = peer.split(":");
+                builder.addNextNodesIPs(addr[0]);
             }
              reply = blockingStub.writeToBlock(builder.build());
 

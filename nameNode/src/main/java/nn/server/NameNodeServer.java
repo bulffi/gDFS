@@ -1,11 +1,12 @@
 package nn.server;
 
-import com.f4.proto.nn.MasterGrpc;
-import com.f4.proto.nn.RegisterRequest;
-import com.f4.proto.nn.RegisterResponse;
+import com.f4.proto.common.PeerInfo;
+import com.f4.proto.nn.*;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import io.grpc.stub.ServerCalls;
 import io.grpc.stub.StreamObserver;
+import nn.dao.MetaDataDao;
 import nn.util.DataNodeRecorder;
 
 import java.io.IOException;
@@ -19,6 +20,7 @@ public class NameNodeServer {
     private final Server server;
     private final CountDownLatch mainThreadLatch;
     private final DataNodeRecorder recorder;
+    private final MetaDataDao dao;
 
     // 初始化 查找现在能写的最大的 ID 是多少
     public NameNodeServer(ServerBuilder<?> serverBuilder, int port, CountDownLatch latch){
@@ -26,6 +28,7 @@ public class NameNodeServer {
         mainThreadLatch = latch;
         server = serverBuilder.addService(new Master()).build();
         recorder = new DataNodeRecorder();
+        dao = new MetaDataDao();
     }
 
     public NameNodeServer(int port, CountDownLatch latch){
@@ -64,21 +67,29 @@ public class NameNodeServer {
     private class Master extends MasterGrpc.MasterImplBase{
         @Override
         public void register(RegisterRequest request, StreamObserver<RegisterResponse> responseObserver) {
-            String host = request.getHost();
-            String port = request.getPort();
-            String addr = String.join(":", host, port);
+            PeerInfo peerInfo = request.getPeer();
 
-            if(recorder.isExist(addr) && !recorder.isActive(addr)){
+            if(recorder.isExist(peerInfo) && !recorder.isActive(peerInfo)){
                 RegisterResponse.Builder builder = RegisterResponse.newBuilder().setStatus(true);
-                for(int i = 0; i < DataNodeRecorder.ACTIVE_DATANODE.size(); i++){
+                for(int i = 0; i < recorder.getActiveSlaveNum(); i++){
                     builder.addPeers(recorder.getActiveSlave(i));
                 }
-                recorder.addActiveDataNode(addr);
+                recorder.addActiveDataNode(peerInfo);
                 responseObserver.onNext(builder.build());
             } else{
                 responseObserver.onNext(RegisterResponse.newBuilder().setStatus(false).build());
             }
             responseObserver.onCompleted();
+        }
+
+        @Override
+        public void reportDataWriteStatus(WriteReportRequest request, StreamObserver<WriteReportReply> responseObserver) {
+            dao.insertBlockDuplcation(request.getLogicalBlockID(), request.getReporter(), request.getPhysicalBlockID());
+        }
+
+        @Override
+        public void reportDataDeleteStatus(DeleteReportRequest request, StreamObserver<DeleteReportReply> responseObserver) {
+
         }
     }
 }

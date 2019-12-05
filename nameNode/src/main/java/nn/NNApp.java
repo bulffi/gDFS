@@ -3,6 +3,7 @@ package nn;
 import nn.server.NameNodeServer;
 import nn.util.DataNodeRecorder;
 import nn.util.FileOperator;
+import nn.util.PropertiesReader;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,7 +23,9 @@ public class NNApp {
         new Thread(){
             @Override
             public void run(){
-                NameNodeServer server = new NameNodeServer(8980, latch);
+                int port = PropertiesReader.getPropertyAsInt("nameNode.port");
+                port = port < 0 ? 8980 : port;
+                NameNodeServer server = new NameNodeServer(port, latch);
                 try {
                     server.start();
                 } catch (IOException | InterruptedException e) {
@@ -33,7 +36,7 @@ public class NNApp {
 
         Scanner scanner = new Scanner(System.in);
         String order = scanner.nextLine();
-        divider.uploadFile(new File("dataNode/src/main/resources/uploadTest/test.png"));
-        divider.downloadFile("test.png", "dataNode/src/main/resources/downloadTest/saturn.png");
+        divider.uploadFile(new File(PropertiesReader.getPropertyAsString("test.uploadDir") + "/test.png"));
+        divider.downloadFile("test.png", PropertiesReader.getPropertyAsString("test.downloadDir") + "/saturn.png");
     }
 }

@@ -1,6 +1,9 @@
 package nn.dao;
 
+import com.f4.proto.common.PeerInfo;
 import nn.message.BlockInfo;
+import nn.util.DataNodeRecorder;
+import nn.util.PropertiesReader;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -20,13 +23,13 @@ public class MetaDataDao {
 
     private static Connection CONN;
 
-    public MetaDataDao(String host, int port, String database, String user, String passwd){
-        this.HOST = host;
-        this.PORT = port;
-        this.DB_NAME = database;
-        this.USER = user;
-        this.PASSWD = passwd;
-        this.DB_URL = "jdbc:mysql://" + HOST + ":" + String.valueOf(port) + "/" + DB_NAME + "?useSSL=false&serverTimeZone=UTC?allowPublicKeyRetrieval=true";
+    public MetaDataDao(){
+        this.HOST = PropertiesReader.getPropertyAsString("mysql.host");
+        this.PORT = PropertiesReader.getPropertyAsInt("mysql.port");
+        this.DB_NAME = PropertiesReader.getPropertyAsString("mysql.database");
+        this.USER = PropertiesReader.getPropertyAsString("mysql.user");
+        this.PASSWD = PropertiesReader.getPropertyAsString("mysql.passwd");
+        this.DB_URL = "jdbc:mysql://" + HOST + ":" + String.valueOf(PORT) + "/" + DB_NAME + "?useSSL=false&serverTimeZone=UTC?allowPublicKeyRetrieval=true";
     }
 
     private Connection getConn(){
@@ -52,12 +55,13 @@ public class MetaDataDao {
         }
     }
 
-    public void insertBlockDuplcation(long blockID, String dnID, long duplicationID){
+    public void insertBlockDuplcation(long blockID, PeerInfo dnID, long duplicationID){
         Connection conn = getConn();
+        String dnIDStr = String.join(":", dnID.getIP(), String.valueOf(dnID.getPort()));
         try{
             PreparedStatement statement = conn.prepareStatement("insert into blockDuplication values(?, ?, ?)");
             statement.setLong(1, blockID);
-            statement.setString(2, dnID);
+            statement.setString(2, dnIDStr);
             statement.setLong(3, duplicationID);
             statement.execute();
         } catch (SQLException e) {
@@ -103,7 +107,7 @@ public class MetaDataDao {
             ResultSet resultSet = statement.executeQuery();
             while(resultSet.next()){
                 blockInfoList.add(new BlockInfo(resultSet.getLong("blockID"),
-                        resultSet.getString("dnID"),
+                        DataNodeRecorder.parsePeerInfo(resultSet.getString("dnID")),
                         resultSet.getLong("duplicationID")));
             }
         } catch (SQLException e) {

@@ -102,9 +102,13 @@ public class FileServer {
 
 
         // =================== 在主机注册自己
-        RegisterResponse registerResponse = master.getStub().register(RegisterRequest.newBuilder()
-                .setHost(ip)
-                .setPort(""+port)
+        RegisterResponse registerResponse = master.getStub().register(RegisterRequest
+                .newBuilder()
+                .setPeer(PeerInfo
+                        .newBuilder()
+                        .setIP(ip)
+                        .setPort(port)
+                        .build())
                 .build());
         logger.info("Try to find master with my IP: " + ip + ", PORT: "+port);
         if (registerResponse.getStatus()){
@@ -262,12 +266,16 @@ public class FileServer {
                 responseObserver.onCompleted();
                 logger.info("Successfully write to block " + availableBlockID);
                 logger.info("Report to master what I have done.");
-                WriteReportReply reportReply = master.getStub().reportDataWriteStatus(WriteReportRequest.newBuilder()
-                        .setIp(ip)
-                        .setFileName(request.getFileName())
-                        .setPhysicalBlockID(availableBlockID)
-                        .setLogicalBlockID(request.getLogicalBlockID())
-                        .build());
+                WriteReportReply reportReply = master.getStub().reportDataWriteStatus(
+                        WriteReportRequest.newBuilder()
+                                .setReporter(PeerInfo.newBuilder()
+                                        .setIP(ip)
+                                        .setPort(port)
+                                        .build())
+                                .setFileName(request.getFileName())
+                                .setPhysicalBlockID(availableBlockID)
+                                .setLogicalBlockID(request.getLogicalBlockID())
+                                .build());
                 if(reportReply.getStatus()==0){
                     logger.error("Master says he gets nothing! Go and check it out");
                 }

@@ -19,7 +19,8 @@ service Master{
 
 message WriteReportRequest{
     // data node 我的IP
-    string ip = 1;
+    //string ip = 1;
+    PeerInfo reporter = 1;
     // 写的什么文件的哪一块
     string fileName = 2;
     int64 logicalBlockID = 3;
@@ -53,6 +54,5 @@ message RegisterResponse{
 
 
 message RegisterRequest{
-    string host = 1;
-    string port = 2;
+    PeerInfo peer = 1;
 }

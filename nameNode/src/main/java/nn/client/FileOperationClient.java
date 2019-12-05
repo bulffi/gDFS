@@ -1,13 +1,13 @@
 package nn.client;
 
+import com.f4.proto.common.PeerInfo;
 import com.f4.proto.dn.*;
 import com.google.protobuf.ByteString;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
-import nn.message.WriteStatus;
 
-import java.io.*;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -32,17 +32,20 @@ public class FileOperationClient {
         channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
     }
 
-    private WriteReply writeToBlock(long blockID, byte[] bytes){
-        logger.info("Write to block # " + blockID);
+    public WriteReply writeToBlock(String fileName, int logicBlockID, byte[] bytes, List<PeerInfo> peers){
+        logger.info("Write to block # " + logicBlockID);
 
         WriteReply reply = null;
         try {
-             reply = blockingStub.writeToBlock(WriteRequest.newBuilder()
-                    .setBlockID(blockID)
-                     .setBlock(ByteString.copyFrom(bytes))
-                     .build());
+            WriteRequest.Builder builder = WriteRequest.newBuilder();
+            builder.setLogicalBlockID(logicBlockID).setFileName(fileName).setBlock(ByteString.copyFrom(bytes));
+            for (PeerInfo peer : peers
+                 ) {
+                builder.addNextNodesIPs(peer.getIP());
+            }
+             reply = blockingStub.writeToBlock(builder.build());
 
-            logger.info("write status: " + reply.getStatus());
+            //logger.info("write status: " + reply.getStatus());
 
         }catch (StatusRuntimeException e){
             logger.warning(e.toString());
@@ -50,20 +53,7 @@ public class FileOperationClient {
         return reply;
     }
 
-    private long getBlockID(){
-        logger.info("Get block ID from data node");
-        try {
-            QueryBlockIDReply reply = blockingStub.getAvailableBlockID(QueryBlockIDRequest.newBuilder()
-                    .build());
-            logger.info("File is stored in block # " + reply.getBlockID());
-            return reply.getBlockID();
-        }catch (StatusRuntimeException e){
-            logger.warning(e.toString());
-        }
-        return -1;
-    }
-
-    private byte[] readByID(long blockID){
+    public byte[] readByID(long blockID){
         logger.info("Read from block # " + blockID);
         try {
             ReadBlockReply readBlockReply = blockingStub.readBlockByID(ReadBlockRequest.newBuilder()
@@ -73,41 +63,5 @@ public class FileOperationClient {
             logger.warning(e.toString());
         }
         return new byte[]{};
-    }
-
-
-    public void upload(String localLocation) throws IOException {
-        BufferedInputStream inputStream = new BufferedInputStream(
-                new FileInputStream(
-                        new File("dataNode/" +
-                                "src/main/resources/uploadTest/" + localLocation)));
-        int length = inputStream.available();
-        byte[] block = new byte[length];
-        int readSize = inputStream.read(block,0,length);
-        logger.info("read " + readSize + "bytes from file");
-        long blockID = getBlockID();
-        writeToBlock(blockID,block);
-    }
-
-    public WriteStatus upload(byte[] block){
-        long blockID = getBlockID();
-        WriteReply reply = writeToBlock(blockID, block);
-        return new WriteStatus(reply.getStatus() == 1L, blockID);
-    }
-
-
-    public void downLoad(long blockID, String localName) throws IOException {
-        byte[] block = readByID(blockID);
-        BufferedOutputStream outputStream = new BufferedOutputStream(
-                new FileOutputStream(
-                        new File("dataNode/" +
-                                "src/main/resources/downloadTest/" + localName)));
-        outputStream.write(block);
-        outputStream.flush();
-        outputStream.close();
-    }
-
-    public byte[] download(String dnID, long blockID){
-        return readByID(blockID);
     }
 }

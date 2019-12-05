@@ -1,9 +1,9 @@
 package nn.util;
 
+import com.f4.proto.common.PeerInfo;
 import nn.client.FileOperationClient;
 import nn.dao.MetaDataDao;
 import nn.message.BlockInfo;
-import nn.message.WriteStatus;
 
 import java.io.*;
 import java.util.Comparator;
@@ -26,23 +26,19 @@ public class FileOperator {
         this.duplicationNum = duplicationNum;
         block = new byte[blockSize];
         recorder = new DataNodeRecorder();
-        dao = new MetaDataDao("localhost", 3306, "DW", "root", "@Cmhdb_wsngp6");
+        dao = new MetaDataDao();
     }
 
     public void uploadFile(File file){
         try {
             BufferedInputStream buffer = new BufferedInputStream(new FileInputStream(file));
             int index = 0;
-            List<String> dns = recorder.getWriteDataNodes(duplicationNum);
+            List<PeerInfo> dns = recorder.getWriteDataNodes(duplicationNum);
             while(buffer.read(block) != -1){
                 dao.insertFileBlock(file.getName(), index);
-                for(int i = 0; i < duplicationNum; i++){
-                    String dnToWrite = dns.get(i);
-                    FileOperationClient client = recorder.getClient(dnToWrite);
-                    WriteStatus status = client.upload(block);
-                    LOGGER.info(status.getBlockID() + ", " + status.isOK());
-                    dao.insertBlockDuplcation(index, dnToWrite, status.getBlockID());
-                }
+                PeerInfo dnToWrite = dns.get(0);
+                FileOperationClient client = recorder.getClient(dnToWrite);
+                client.writeToBlock(file.getName(), index, block, dns);
                 index++;
             }
             dao.insertFileBlockNum(file.getName(), index);
@@ -68,7 +64,7 @@ public class FileOperator {
             for(int i = 0; i < blockInfoList.size(); i++){
                 BlockInfo blockInfo = blockInfoList.get(i);
                 if(blockInfo.getBlockID() == currentIndex){
-                    byte[] test =recorder.getClient(blockInfo.getDnID()).download(blockInfo.getDnID(), blockInfo.getDuplicationID());
+                    byte[] test =recorder.getClient(blockInfo.getDnID()).readByID(blockInfo.getDuplicationID());
                     buffer.write(test);
                     currentIndex++;
                 }

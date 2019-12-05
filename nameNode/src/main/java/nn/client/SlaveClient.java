@@ -40,32 +40,32 @@ public class SlaveClient {
         channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
     }
 
-    private void register(){
-        try {
-            Properties properties = new Properties();
-            properties.load(new FileReader(new File(pathForConf)));
-
-            port = (String)properties.get("dataNode.port");
-            host = (String)properties.get("dataNode.host");
-
-            RegisterResponse response = blockingStub.register(RegisterRequest
-                    .newBuilder()
-                    .setHost(host)
-                    .setPort(port)
-                    .build());
-            ProtocolStringList list = response.getPeersList();
-            for (String message:list) {
-                System.out.println(message);
-            }
-        }catch (IOException e){
-            logger.warning("Fail to read dataNodeConfig.properties in "+ pathForConf +" . Data node won't start.");
-        }catch (NumberFormatException e){
-            logger.warning("Invalid dataNode.port config");
-        }
-    }
+//    private void register(){
+//        try {
+//            Properties properties = new Properties();
+//            properties.load(new FileReader(new File(pathForConf)));
+//
+//            port = (String)properties.get("dataNode.port");
+//            host = (String)properties.get("dataNode.host");
+//
+//            RegisterResponse response = blockingStub.register(RegisterRequest
+//                    .newBuilder()
+//                    .setHost(host)
+//                    .setPort(port)
+//                    .build());
+//            ProtocolStringList list = response.getPeersList();
+//            for (String message:list) {
+//                System.out.println(message);
+//            }
+//        }catch (IOException e){
+//            logger.warning("Fail to read dataNodeConfig.properties in "+ pathForConf +" . Data node won't start.");
+//        }catch (NumberFormatException e){
+//            logger.warning("Invalid dataNode.port config");
+//        }
+//    }
 
     public static void main(String[] args){
-        SlaveClient client = new SlaveClient("localhost", 8980);
-        client.register();
+        //SlaveClient client = new SlaveClient("localhost", 8980);
+        //client.register();
     }
 }

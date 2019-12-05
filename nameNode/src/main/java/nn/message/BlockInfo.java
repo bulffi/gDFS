@@ -1,11 +1,13 @@
 package nn.message;
 
+import com.f4.proto.common.PeerInfo;
+
 public class BlockInfo {
     long blockID;
-    String dnID;
+    PeerInfo dnID;
     long duplicationID;
 
-    public BlockInfo(long blockID, String dnID, long duplicationID) {
+    public BlockInfo(long blockID, PeerInfo dnID, long duplicationID) {
         this.blockID = blockID;
         this.dnID = dnID;
         this.duplicationID = duplicationID;
@@ -19,11 +21,11 @@ public class BlockInfo {
         this.blockID = blockID;
     }
 
-    public String getDnID() {
+    public PeerInfo getDnID() {
         return dnID;
     }
 
-    public void setDnID(String dnID) {
+    public void setDnID(PeerInfo dnID) {
         this.dnID = dnID;
     }
 

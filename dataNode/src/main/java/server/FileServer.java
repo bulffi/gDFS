@@ -81,7 +81,7 @@ public class FileServer {
             }
         }
         try {
-            this.BLOCK_PATH = properties.get("dataNode.Dir") + "/";
+            this.BLOCK_PATH = properties.get("dataNode.dataDir") + File.separator;
             this.port = Integer.parseInt((String) properties.get("dataNode.port"));
         }catch (NumberFormatException e){
             logger.error("Invalid dataNode.port config");
@@ -118,7 +118,7 @@ public class FileServer {
             System.exit(-1);
         }
 
-        // ==================== 找朋友
+        // ==================== 将主机告知自己的现有的节点放入连接池中
         List<PeerInfo> peerInfos = registerResponse.getPeersList();
         for (PeerInfo p : peerInfos) {
             if(!addPeer(p)){
@@ -127,6 +127,17 @@ public class FileServer {
         }
         logger.info("Successfully connected to my peers");
 
+        // ==================== 向其他的 data node 注册自己
+        logger.info("Trying to find my brothers and register myself to them");
+        for (Peer p : peers) {
+            DataNodeReply reply = p.getStub().addNewDataNode(PeerInfo.newBuilder().setIP(ip).setPort(port).build());
+            if (reply.getStatus() == 1){
+                logger.info("I have successfully registered in node: " + p.getIp());
+            }else {
+                logger.error("Fail to register in node: " + p.getIp() + " Exiting....");
+                System.exit(-1);
+            }
+        }
         // =================== 开通自己的 Server
         mainThreadLatch = latch;
         ServerBuilder<?> serverBuilder = ServerBuilder.forPort(this.port);

@@ -46,7 +46,7 @@ public class DataNodeRecorder {
         return null;
     }
 
-    private String getPeerInfoString(PeerInfo peerInfo) throws NullPointerException{
+    public static String getPeerInfoString(PeerInfo peerInfo) throws NullPointerException{
         return String.join(":", peerInfo.getIP(), "" + peerInfo.getPort());
     }
 

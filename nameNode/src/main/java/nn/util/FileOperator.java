@@ -21,9 +21,9 @@ public class FileOperator {
     private final DataNodeRecorder recorder;
     private MetaDataDao dao;
 
-    public FileOperator(int blockSize, int duplicationNum) {
-        this.blockSize = blockSize;
-        this.duplicationNum = duplicationNum;
+    public FileOperator() {
+        this.blockSize = PropertiesReader.getPropertyAsInt("dataNode.blockSize");
+        this.duplicationNum = PropertiesReader.getPropertyAsInt("dataNode.duplicationNum");
         block = new byte[blockSize];
         recorder = new DataNodeRecorder();
         dao = new MetaDataDao();
@@ -33,12 +33,19 @@ public class FileOperator {
         try {
             BufferedInputStream buffer = new BufferedInputStream(new FileInputStream(file));
             int index = 0;
+            int read = 0;
             List<String> dns = recorder.getWriteDataNodes(duplicationNum);
-            while(buffer.read(block) != -1){
+            while((read = buffer.read(block)) != -1){
                 dao.insertFileBlock(file.getName(), index);
                 String dnToWrite = dns.get(0);
                 FileOperationClient client = recorder.getClient(dnToWrite);
-                client.writeToBlock(file.getName(), index, block, dns);
+                if(read < blockSize){
+                    byte[] tail = new byte[read];
+                    System.arraycopy(block, 0, tail, 0, read);
+                    client.writeToBlock(file.getName(), index, tail, dns);
+                }else {
+                    client.writeToBlock(file.getName(), index, block, dns);
+                }
                 index++;
             }
             dao.insertFileBlockNum(file.getName(), index);
@@ -47,6 +54,7 @@ public class FileOperator {
         } catch (IOException e) {
             e.printStackTrace();
         }catch (Exception e){
+            e.printStackTrace();
             LOGGER.warning("Unknown errors!");
         }
     }
@@ -66,7 +74,8 @@ public class FileOperator {
             for(int i = 0; i < blockInfoList.size(); i++){
                 BlockInfo blockInfo = blockInfoList.get(i);
                 if(blockInfo.getBlockID() == currentIndex){
-                    byte[] test =recorder.getClient(blockInfo.getDnID().getIP()).readByID(blockInfo.getDuplicationID());
+                    String peerString = DataNodeRecorder.getPeerInfoString(blockInfo.getDnID());
+                    byte[] test =recorder.getClient(peerString).readByID(blockInfo.getDuplicationID());
                     buffer.write(test);
                     currentIndex++;
                 }
@@ -76,6 +85,9 @@ public class FileOperator {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
+            e.printStackTrace();
+        }catch (Exception e){
+            LOGGER.warning("Unkown errors from FileOperator");
             e.printStackTrace();
         }
     }

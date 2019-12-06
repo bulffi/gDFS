@@ -78,11 +78,6 @@ CREATE TABLE `file_blockNum` (
 -- Dumping data for table `file_blockNum`
 --
 
-LOCK TABLES `file_blockNum` WRITE;
-/*!40000 ALTER TABLE `file_blockNum` DISABLE KEYS */;
-INSERT INTO `file_blockNum` VALUES ('test.png',7);
-/*!40000 ALTER TABLE `file_blockNum` ENABLE KEYS */;
-UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;

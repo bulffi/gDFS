@@ -129,14 +129,18 @@ public class FileServer {
 
         // ==================== 向其他的 data node 注册自己
         logger.info("Trying to find my brothers and register myself to them");
-        for (Peer p : peers) {
-            DataNodeReply reply = p.getStub().addNewDataNode(PeerInfo.newBuilder().setIP(ip).setPort(port).build());
-            if (reply.getStatus() == 1){
-                logger.info("I have successfully registered in node: " + p.getIp());
-            }else {
-                logger.error("Fail to register in node: " + p.getIp() + " Exiting....");
-                System.exit(-1);
+        try {
+            for (Peer p : peers) {
+                DataNodeReply reply = p.getStub().addNewDataNode(PeerInfo.newBuilder().setIP(ip).setPort(port).build());
+                if (reply.getStatus() == 1) {
+                    logger.info("I have successfully registered in node: " + p.getIp());
+                } else {
+                    logger.error("Fail to register in node: " + p.getIp() + " Exiting....");
+                    System.exit(-1);
+                }
             }
+        }catch (NullPointerException e){
+            logger.info("No peers to contact!");
         }
         // =================== 开通自己的 Server
         mainThreadLatch = latch;

@@ -15,7 +15,7 @@ import java.util.concurrent.CountDownLatch;
 
 public class NNApp {
     public static void main(String[] args){
-        FileOperator divider = new FileOperator(50 * 1204, 3);
+        FileOperator divider = new FileOperator();
         // 防止主线程退出
         final CountDownLatch latch = new CountDownLatch(1);
 
@@ -35,8 +35,8 @@ public class NNApp {
         }.start();
 
         Scanner scanner = new Scanner(System.in);
-        String order = scanner.nextLine();
-        divider.uploadFile(new File(PropertiesReader.getPropertyAsString("test.uploadDir") + "/test.png"));
-        divider.downloadFile("test.png", PropertiesReader.getPropertyAsString("test.downloadDir") + "/saturn.png");
+        String file = scanner.nextLine();
+        divider.uploadFile(new File(PropertiesReader.getPropertyAsString("test.uploadDir") + file));
+        divider.downloadFile(file, PropertiesReader.getPropertyAsString("test.downloadDir") + file);
     }
 }

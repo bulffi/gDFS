@@ -1,6 +1,7 @@
 package nn.server;
 
 import com.f4.proto.common.PeerInfo;
+import com.f4.proto.dn.WriteReply;
 import com.f4.proto.nn.*;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
@@ -84,6 +85,7 @@ public class NameNodeServer {
         @Override
         public void reportDataWriteStatus(WriteReportRequest request, StreamObserver<WriteReportReply> responseObserver) {
             dao.insertBlockDuplcation(request.getLogicalBlockID(), request.getReporter(), request.getPhysicalBlockID());
+            responseObserver.onNext(WriteReportReply.newBuilder().setStatus(0).build());
             responseObserver.onCompleted();
         }
 

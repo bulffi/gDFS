@@ -7,7 +7,9 @@ import nn.message.BlockInfo;
 
 import java.io.*;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
+import java.util.Random;
 import java.util.logging.Logger;
 
 public class FileOperator {
@@ -64,7 +66,12 @@ public class FileOperator {
         blockInfoList.sort(new Comparator<BlockInfo>() {
             @Override
             public int compare(BlockInfo blockInfo, BlockInfo t1) {
-                return (int)(blockInfo.getBlockID() - t1.getBlockID());
+                int delta =  (int)(blockInfo.getBlockID() - t1.getBlockID());
+                if(delta != 0){
+                    return delta;
+                }else {
+                    return new Random(new Date().getTime()).nextInt(3) - 1;
+                }
             }
         });
         int blocks = dao.getFileBlockNum(srcPath);

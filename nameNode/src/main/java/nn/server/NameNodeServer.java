@@ -85,7 +85,7 @@ public class NameNodeServer {
         @Override
         public void reportDataWriteStatus(WriteReportRequest request, StreamObserver<WriteReportReply> responseObserver) {
             dao.insertBlockDuplcation(request.getLogicalBlockID(), request.getReporter(), request.getPhysicalBlockID());
-            responseObserver.onNext(WriteReportReply.newBuilder().setStatus(0).build());
+            responseObserver.onNext(WriteReportReply.newBuilder().setStatus(1).build());
             responseObserver.onCompleted();
         }
 

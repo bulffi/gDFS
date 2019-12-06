@@ -6,6 +6,7 @@ import com.google.protobuf.ByteString;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
+import nn.util.DataNodeRecorder;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -41,8 +42,7 @@ public class FileOperationClient {
             builder.setLogicalBlockID(logicBlockID).setFileName(fileName).setBlock(ByteString.copyFrom(bytes));
             for (String peer : peers
                  ) {
-                String[] addr = peer.split(":");
-                builder.addNextNodesIPs(addr[0]);
+                builder.addNextNodesIPs(DataNodeRecorder.parsePeerInfo(peer));
             }
              reply = blockingStub.writeToBlock(builder.build());
 

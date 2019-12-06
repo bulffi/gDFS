@@ -52,6 +52,14 @@ public class MetaDataDao {
             statement.execute();
         } catch (SQLException e) {
             e.printStackTrace();
+        }finally {
+            if(conn != null){
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
@@ -66,6 +74,14 @@ public class MetaDataDao {
             statement.execute();
         } catch (SQLException e) {
             e.printStackTrace();
+        }finally {
+            if(conn != null){
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
@@ -79,6 +95,14 @@ public class MetaDataDao {
             statement.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
+        }finally {
+            if(conn != null){
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
@@ -94,6 +118,14 @@ public class MetaDataDao {
             }
         } catch (SQLException ex) {
             ex.printStackTrace();
+        }finally {
+            if(conn != null){
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
         }
         return blockNum;
     }
@@ -112,6 +144,14 @@ public class MetaDataDao {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        }finally {
+            if(conn != null){
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
         }
         return blockInfoList;
     }

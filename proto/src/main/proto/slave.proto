@@ -38,7 +38,7 @@ message WriteRequest{
     string fileName = 1;
     int64 logicalBlockID = 2;
     bytes block = 3;
-    repeated string nextNodesIPs = 4;
+    repeated PeerInfo nextNodesIPs = 4;
 }
 message WriteReply{}
 

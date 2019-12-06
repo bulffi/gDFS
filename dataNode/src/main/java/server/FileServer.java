@@ -60,7 +60,7 @@ public class FileServer {
     // 初始化 查找现在能写的最大的 ID 是多少
     // 向 name node 组册，获取初步的 peer 列表
     public FileServer(CountDownLatch latch) throws IOException {
-
+        peers = new ArrayList<>();
         //========== 读配置文件
         Properties properties = new Properties();
         try {
@@ -192,6 +192,7 @@ public class FileServer {
             return true;
         }catch (Exception e){
             logger.error("Can not add peer in " + p.getIP()+":"+p.getPort()+"    "+e.getLocalizedMessage());
+            e.printStackTrace();
             return false;
         }
 
@@ -252,9 +253,10 @@ public class FileServer {
         @Override
         public void writeToBlock(WriteRequest request, StreamObserver<WriteReply> responseObserver)  {
             logger.info("Write file " + request.getFileName() + " logicalBlock: " + request.getLogicalBlockID());
-            List<String> nextIPS = request.getNextNodesIPsList();
+            List<PeerInfo> temptIPS = request.getNextNodesIPsList();
+            List<PeerInfo> nextIPS = new ArrayList<>(temptIPS);
             try {
-                if (!nextIPS.get(0).equals(ip)){
+                if (!(nextIPS.get(0).getIP().equals(ip) && nextIPS.get(0).getPort() == port)){
                     logger.error("This is not my IP, sth wrong with my previous");
                     return;
                 }
@@ -297,16 +299,18 @@ public class FileServer {
                 if (nextIPS.size() > 1){
                     logger.info("Pass on to the next one");
                     nextIPS.remove(0);
-                    String nextIP = nextIPS.get(0);
+                    PeerInfo nextIP = nextIPS.get(0);
+                    logger.info("The size of current ip list " + nextIPS.size());
                     for (Peer p : peers) {
-                        if(p.getIp().equals(nextIP)){
+                        logger.info("Trying to find " + nextIP.getIP()+": "+nextIP.getPort());
+                        if(p.getIp().equals(nextIP.getIP()) && p.getPort() == nextIP.getPort() ){
                             logger.info("Next peer is " + nextIP);
                             WriteRequest.Builder nextRequestBuilder = WriteRequest.newBuilder()
                                     .setBlock(request.getBlock())
                                     .setFileName(request.getFileName())
                                     .setLogicalBlockID(request.getLogicalBlockID());
-                            for(int i =0; i <nextIPS.size();i++){
-                                nextRequestBuilder.setNextNodesIPs(i,nextIPS.get(i));
+                            for (PeerInfo peerInfo : nextIPS) {
+                                nextRequestBuilder.addNextNodesIPs(peerInfo);
                             }
                             WriteRequest nextRequest = nextRequestBuilder.build();
                             WriteReply r = p.getStub().writeToBlock(nextRequest);

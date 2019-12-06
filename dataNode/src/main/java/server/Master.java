@@ -13,6 +13,16 @@ public class Master {
     int port;
     MasterGrpc.MasterBlockingStub stub;
 
+    public MasterGrpc.MasterStub getAsyncStub() {
+        return asyncStub;
+    }
+
+    public void setAsyncStub(MasterGrpc.MasterStub asyncStub) {
+        this.asyncStub = asyncStub;
+    }
+
+    MasterGrpc.MasterStub asyncStub;
+
     public String getIp() {
         return ip;
     }

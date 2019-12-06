@@ -15,7 +15,15 @@ service Master{
     // data node 之间互相写 写好了会告诉你{我是谁，我写了什么文件，写的逻辑块号码，写的物理块号码} 以便你了解哪里有什么
     rpc reportDataWriteStatus(WriteReportRequest) returns (WriteReportReply) {}
     rpc reportDataDeleteStatus(DeleteReportRequest) returns (DeleteReportReply) {}
+
+    rpc heartBeat(stream HeartBeatInfo) returns (NullReply) {}
 }
+
+message HeartBeatInfo{
+    PeerInfo reporter = 1;
+}
+
+message NullReply{}
 
 message WriteReportRequest{
     // data node 我的IP

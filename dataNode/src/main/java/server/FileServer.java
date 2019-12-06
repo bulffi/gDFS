@@ -92,10 +92,12 @@ public class FileServer {
             int masterPort = Integer.parseInt((String)properties.get("nameNode.port"));
             ManagedChannel channel = ManagedChannelBuilder.forAddress(masterIP,masterPort).usePlaintext().build();
             MasterGrpc.MasterBlockingStub masterStub = MasterGrpc.newBlockingStub(channel);
+            MasterGrpc.MasterStub masterAsyncStub = MasterGrpc.newStub(channel);
             master = new Master();
             master.setIp(masterIP);
             master.setPort(masterPort);
             master.setStub(masterStub);
+            master.setAsyncStub(masterAsyncStub);
         }catch (Exception e){
             logger.error("Can not get master node. " + e.getLocalizedMessage());
         }
@@ -117,6 +119,46 @@ public class FileServer {
             logger.error("Can not register to master. Exit...");
             System.exit(-1);
         }
+
+        // =================== 开始向master做心跳
+        StreamObserver<NullReply> responseObserver = new StreamObserver<NullReply>() {
+            @Override
+            public void onNext(NullReply nullReply) {
+                logger.error("Master is suicide!");
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+                logger.error("Master is suicide!");
+            }
+
+            @Override
+            public void onCompleted() {
+                logger.error("Master is suicide!");
+            }
+        };
+        StreamObserver<HeartBeatInfo> requestObserver = master.getAsyncStub().heartBeat(responseObserver);
+        Thread reportToMaster = new Thread(){
+          @Override
+          public void run(){
+              try {
+                  while (true){
+                      requestObserver.onNext(HeartBeatInfo.newBuilder()
+                              .setReporter(PeerInfo.newBuilder()
+                                      .setPort(port)
+                                      .setIP(ip)
+                                      .build())
+                              .build());
+                      Thread.sleep(1000);
+                  }
+              } catch (InterruptedException e) {
+                  logger.error("Losing heartbeat to master! Shutting down...");
+                  e.printStackTrace();
+                  System.exit(-1);
+              }
+          }
+        };
+        reportToMaster.start();
 
         // ==================== 将主机告知自己的现有的节点放入连接池中
         List<PeerInfo> peerInfos = registerResponse.getPeersList();
@@ -297,12 +339,12 @@ public class FileServer {
                     logger.error("Master says he gets nothing! Go and check it out");
                 }
                 if (nextIPS.size() > 1){
-                    logger.info("Pass on to the next one");
+                    //logger.info("Pass on to the next one");
                     nextIPS.remove(0);
                     PeerInfo nextIP = nextIPS.get(0);
-                    logger.info("The size of current ip list " + nextIPS.size());
+                    //logger.info("The size of current ip list " + nextIPS.size());
                     for (Peer p : peers) {
-                        logger.info("Trying to find " + nextIP.getIP()+": "+nextIP.getPort());
+                        //logger.info("Trying to find " + nextIP.getIP()+": "+nextIP.getPort());
                         if(p.getIp().equals(nextIP.getIP()) && p.getPort() == nextIP.getPort() ){
                             logger.info("Next peer is " + nextIP);
                             WriteRequest.Builder nextRequestBuilder = WriteRequest.newBuilder()

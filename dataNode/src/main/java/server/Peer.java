@@ -10,7 +10,17 @@ import com.f4.proto.dn.SlaveGrpc;
  **/
 public class Peer {
     private SlaveGrpc.SlaveBlockingStub stub;
+    private SlaveGrpc.SlaveStub asyncStub;
     private String ip;
+
+    public SlaveGrpc.SlaveStub getAsyncStub() {
+        return asyncStub;
+    }
+
+    public void setAsyncStub(SlaveGrpc.SlaveStub asyncStub) {
+        this.asyncStub = asyncStub;
+    }
+
     private int port;
 
     public SlaveGrpc.SlaveBlockingStub getStub() {

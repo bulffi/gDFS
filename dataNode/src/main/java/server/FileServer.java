@@ -225,10 +225,12 @@ public class FileServer {
         try {
             ManagedChannel channel = ManagedChannelBuilder.forAddress(p.getIP(),p.getPort()).usePlaintext().build();
             SlaveGrpc.SlaveBlockingStub stub = SlaveGrpc.newBlockingStub(channel);
+            SlaveGrpc.SlaveStub asyncStub = SlaveGrpc.newStub(channel);
             Peer peer = new Peer();
             peer.setIp(p.getIP());
             peer.setPort(p.getPort());
             peer.setStub(stub);
+            peer.setAsyncStub(asyncStub);
             peers.add(peer);
             logger.info("Get a peer in " + p.getIP() + ":" + p.getPort());
             return true;
@@ -325,7 +327,7 @@ public class FileServer {
                 responseObserver.onCompleted();
                 logger.info("Successfully write to block " + availableBlockID);
                 logger.info("Report to master what I have done.");
-                WriteReportReply reportReply = master.getStub().reportDataWriteStatus(
+                master.getAsyncStub().reportDataWriteStatus(
                         WriteReportRequest.newBuilder()
                                 .setReporter(PeerInfo.newBuilder()
                                         .setIP(ip)
@@ -334,10 +336,24 @@ public class FileServer {
                                 .setFileName(request.getFileName())
                                 .setPhysicalBlockID(availableBlockID)
                                 .setLogicalBlockID(request.getLogicalBlockID())
-                                .build());
-                if(reportReply.getStatus()==0){
-                    logger.error("Master says he gets nothing! Go and check it out");
-                }
+                                .build(), new StreamObserver<WriteReportReply>() {
+                            @Override
+                            public void onNext(WriteReportReply writeReportReply) {
+                                if(writeReportReply.getStatus() == 0){
+                                    logger.error("Master says he gets nothing! Go and check it out");
+                                }
+                            }
+
+                            @Override
+                            public void onError(Throwable throwable) {
+
+                            }
+
+                            @Override
+                            public void onCompleted() {
+
+                            }
+                        });
                 if (nextIPS.size() > 1){
                     //logger.info("Pass on to the next one");
                     nextIPS.remove(0);
@@ -355,7 +371,23 @@ public class FileServer {
                                 nextRequestBuilder.addNextNodesIPs(peerInfo);
                             }
                             WriteRequest nextRequest = nextRequestBuilder.build();
-                            WriteReply r = p.getStub().writeToBlock(nextRequest);
+                            p.getAsyncStub().writeToBlock(nextRequest, new StreamObserver<WriteReply>() {
+                                @Override
+                                public void onNext(WriteReply writeReply) {
+
+                                }
+
+                                @Override
+                                public void onError(Throwable throwable) {
+
+                                }
+
+                                @Override
+                                public void onCompleted() {
+
+                                }
+                            });
+                            // WriteReply r = p.getStub().writeToBlock(nextRequest);
                            logger.info("My write is done and work is passed to next one");
                            return;
                         }
@@ -436,10 +468,24 @@ public class FileServer {
                         .build());
             }
             DeleteReportRequest reportRequest = reportBuilder.build();
-            DeleteReportReply reply = master.getStub().reportDataDeleteStatus(reportRequest);
-            if(reply.getStatus()==0){
-                logger.error("Master says he has an error! Go and have a look");
-            }
+            master.getAsyncStub().reportDataDeleteStatus(reportRequest, new StreamObserver<DeleteReportReply>() {
+                @Override
+                public void onNext(DeleteReportReply deleteReportReply) {
+                    if(deleteReportReply.getStatus() == 0){
+                        logger.error("Master says he has an error! Go and have a look");
+                    }
+                }
+
+                @Override
+                public void onError(Throwable throwable) {
+
+                }
+
+                @Override
+                public void onCompleted() {
+
+                }
+            });
             if(deleteInfoList.size()>1){
                 deleteInfoList.remove(0);
                 logger.info("Passing to the next peer at " + deleteInfoList.get(0).getIp());
@@ -450,7 +496,22 @@ public class FileServer {
                         for (int i = 0; i < deleteInfoList.size(); i++) {
                             requestBuilder.setNodesToDelete(i,deleteInfoList.get(i));
                         }
-                        DeleteBlockReply peerReply = p.getStub().deleteBlockByID(requestBuilder.build());
+                        p.getAsyncStub().deleteBlockByID(requestBuilder.build(), new StreamObserver<DeleteBlockReply>() {
+                            @Override
+                            public void onNext(DeleteBlockReply deleteBlockReply) {
+
+                            }
+
+                            @Override
+                            public void onError(Throwable throwable) {
+
+                            }
+
+                            @Override
+                            public void onCompleted() {
+
+                            }
+                        });
                         logger.info("My delete is done and has passed to the next peer");
                         return;
                     }

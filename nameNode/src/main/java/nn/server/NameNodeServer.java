@@ -1,7 +1,6 @@
 package nn.server;
 
 import com.f4.proto.common.PeerInfo;
-import com.f4.proto.dn.WriteReply;
 import com.f4.proto.nn.*;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
@@ -10,6 +9,7 @@ import nn.dao.MetaDataDao;
 import nn.util.DataNodeRecorder;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Logger;
 
@@ -22,7 +22,6 @@ public class NameNodeServer {
     private final DataNodeRecorder recorder;
     private final MetaDataDao dao;
 
-    // 初始化 查找现在能写的最大的 ID 是多少
     public NameNodeServer(ServerBuilder<?> serverBuilder, int port, CountDownLatch latch){
         this.port = port;
         mainThreadLatch = latch;
@@ -49,11 +48,15 @@ public class NameNodeServer {
         blockUntilShutdown();
     }
 
-    private void stop(){
+    public void stop(){
         if(server!=null){
             server.shutdown();
             mainThreadLatch.countDown();
         }
+    }
+
+    public boolean isTerminated(){
+        return server.isTerminated();
     }
 
     private void blockUntilShutdown() throws InterruptedException{
@@ -76,6 +79,7 @@ public class NameNodeServer {
                 }
                 recorder.addActiveDataNode(peerInfo);
                 responseObserver.onNext(builder.build());
+                logger.info("New slave joined, address is " + peerInfo.getIP() + ":" + peerInfo.getPort());
             } else{
                 responseObserver.onNext(RegisterResponse.newBuilder().setStatus(false).build());
             }
@@ -84,7 +88,8 @@ public class NameNodeServer {
 
         @Override
         public void reportDataWriteStatus(WriteReportRequest request, StreamObserver<WriteReportReply> responseObserver) {
-            dao.insertBlockDuplcation(request.getLogicalBlockID(), request.getReporter(), request.getPhysicalBlockID());
+            dao.insertBlockDuplcation(request.getLogicalBlockID(), request.getReporter(), request.getPhysicalBlockID(), request.getFileName());
+            logger.info("Block#" + request.getLogicalBlockID() + " has been written!");
             responseObserver.onNext(WriteReportReply.newBuilder().setStatus(1).build());
             responseObserver.onCompleted();
         }
@@ -92,6 +97,29 @@ public class NameNodeServer {
         @Override
         public void reportDataDeleteStatus(DeleteReportRequest request, StreamObserver<DeleteReportReply> responseObserver) {
 
+        }
+
+        @Override
+        public StreamObserver<HeartBeatInfo> heartBeat(StreamObserver<NullReply> responseObserver) {
+            return new StreamObserver<HeartBeatInfo>() {
+                @Override
+                public void onNext(HeartBeatInfo heartBeatInfo) {
+                    PeerInfo peerInfo = heartBeatInfo.getReporter();
+                    //logger.info("New heartbeat received from " + peerInfo.getIP() + ":" + peerInfo.getPort());
+                    recorder.updateSlaveHeartbeatTime(peerInfo, new Date().getTime());
+                }
+
+                @Override
+                public void onError(Throwable throwable) {
+                    logger.warning("Namenode have problem with heartbeat with slave ");
+                }
+
+                @Override
+                public void onCompleted() {
+                    responseObserver.onNext(NullReply.newBuilder().build());
+                    responseObserver.onCompleted();
+                }
+            };
         }
     }
 }

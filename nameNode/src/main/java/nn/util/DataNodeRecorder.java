@@ -8,16 +8,22 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
+import java.util.logging.Logger;
 
 public class DataNodeRecorder {
     public static List<String> ACTIVE_DATANODE;
     public static List<String> ALL_DATANODE;
     public static Map<String, FileOperationClient> CLIENT_MAP;
+    public static Map<String, Long> HEARTBEAT_MAP;
+    private static final int maxHeartbeatInterval;
+    private static final Logger logger = Logger.getLogger(DataNodeRecorder.class.getName());
 
     static{
         ALL_DATANODE = new ArrayList<>();
         ACTIVE_DATANODE = new ArrayList<>();
         CLIENT_MAP = new HashMap<>();
+        HEARTBEAT_MAP = new HashMap<>();
+        maxHeartbeatInterval = PropertiesReader.getPropertyAsInt("nameNode.maxHeartbeatInterval");
         try {
             BufferedReader reader = new BufferedReader(new FileReader(PropertiesReader.getPropertyAsString("nameNode.slaveConfigFilePath")));
             String slave;
@@ -95,4 +101,22 @@ public class DataNodeRecorder {
     }
 
     public int getActiveSlaveNum(){return ACTIVE_DATANODE.size();}
+
+    public void updateSlaveHeartbeatTime(PeerInfo peerInfo, long tsp){
+        String peerString = getPeerInfoString(peerInfo);
+        HEARTBEAT_MAP.put(peerString, tsp);
+    }
+
+    public void checkForDead(){
+        Iterator<Map.Entry<String, Long>> entries = HEARTBEAT_MAP.entrySet().iterator();
+        while (entries.hasNext()) {
+            Map.Entry<String, Long> entry = entries.next();
+            if(new Date().getTime() - entry.getValue() > maxHeartbeatInterval){
+                HEARTBEAT_MAP.remove(entry.getKey());
+                ACTIVE_DATANODE.remove(entry.getKey());
+                CLIENT_MAP.remove(entry.getKey());
+                logger.info("Namenode has lost contact with slave " + entry.getKey());
+            }
+        }
+    }
 }

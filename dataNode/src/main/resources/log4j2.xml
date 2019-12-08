@@ -5,7 +5,8 @@
             <PatternLayout pattern="%d{YYYY-MM-dd HH:mm:ss} [%t] %-5p %c{1}:%L - %msg%n" />
         </Console>
 
-        <RollingFile name="RollingFile" filename="/Users/zhangzijian/Downloads/gDFS/log/gDFS.log" filepattern="${logPath}/%d{YYYYMMddHHmmss}-fargo.log">
+        <!--<RollingFile name="RollingFile" filename="/Users/zhangzijian/Downloads/gDFS/log/gDFS.log" filepattern="${logPath}/%d{YYYYMMddHHmmss}-fargo.log">-->
+        <RollingFile name="RollingFile" filename="/home/saturn/data/log/gDFS.log" filepattern="${logPath}/%d{YYYYMMddHHmmss}-fargo.log">
             <PatternLayout pattern="%d{YYYY-MM-dd HH:mm:ss} [%t] %-5p %c{1}:%L - %msg%n" />
             <Policies>
                 <SizeBasedTriggeringPolicy size="10 MB" />

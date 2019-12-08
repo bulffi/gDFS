@@ -43,16 +43,24 @@ public class MetaDataDao {
         return conn;
     }
 
-    public void insertFileBlock(String fileName, long blockID){
+    public boolean checkExistence(String fileName){
         Connection conn = getConn();
-        try {
-            PreparedStatement statement = conn.prepareStatement("insert into file_block values(?, ?)");
+        try{
+            PreparedStatement statement = conn.prepareStatement("select * from file_blockNum where fileName=?");
             statement.setString(1, fileName);
-            statement.setLong(2, blockID);
-            statement.execute();
+            ResultSet resultSet = statement.executeQuery();
+            if(resultSet.next()){
+                return true;
+            }else {
+                return false;
+            }
         } catch (SQLException e) {
             e.printStackTrace();
-        }finally {
+            return false;
+        }catch (NullPointerException e) {
+            LOGGER.warning("Can't get database connection!");
+            return false;
+        }finally{
             if(conn != null){
                 try {
                     conn.close();
@@ -63,18 +71,22 @@ public class MetaDataDao {
         }
     }
 
-    public void insertBlockDuplcation(long blockID, PeerInfo dnID, long duplicationID){
+    public void insertBlockDuplcation(long blockID, PeerInfo dnID, long duplicationID, String fileName){
         Connection conn = getConn();
         String dnIDStr = String.join(":", dnID.getIP(), String.valueOf(dnID.getPort()));
         try{
-            PreparedStatement statement = conn.prepareStatement("insert into blockDuplication values(?, ?, ?)");
+            PreparedStatement statement = conn.prepareStatement("insert into blockDuplication values(?, ?, ?, ?)");
             statement.setLong(1, blockID);
             statement.setString(2, dnIDStr);
             statement.setLong(3, duplicationID);
+            statement.setString(4, fileName);
             statement.execute();
         } catch (SQLException e) {
             e.printStackTrace();
-        }finally {
+        }catch (NullPointerException e) {
+            LOGGER.warning("Can't get database connection!");
+        }
+        finally {
             if(conn != null){
                 try {
                     conn.close();
@@ -95,7 +107,32 @@ public class MetaDataDao {
             statement.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
-        }finally {
+        }catch (NullPointerException e) {
+            LOGGER.warning("Can't get database connection!");
+        } finally {
+            if(conn != null){
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public void updateFileBlockNum(String fileName, int blockNum){
+        Connection conn = getConn();
+        try {
+            PreparedStatement statement = conn.prepareStatement("update file_blockNum set blockNum=? where fileName=?");
+            statement.setLong(1, blockNum);
+            statement.setString(2, fileName);
+            statement.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }catch (NullPointerException e) {
+            LOGGER.warning("Can't get database connection!");
+        }
+        finally {
             if(conn != null){
                 try {
                     conn.close();
@@ -118,7 +155,10 @@ public class MetaDataDao {
             }
         } catch (SQLException ex) {
             ex.printStackTrace();
-        }finally {
+        }catch (NullPointerException e) {
+            LOGGER.warning("Can't get database connection!");
+        }
+        finally {
             if(conn != null){
                 try {
                     conn.close();
@@ -134,7 +174,7 @@ public class MetaDataDao {
         Connection conn = getConn();
         List<BlockInfo> blockInfoList = new ArrayList<>();
         try{
-            PreparedStatement statement = conn.prepareStatement("select file_block.blockID, dnID, duplicationID from file_block natural join blockDuplication where fileName=?");
+            PreparedStatement statement = conn.prepareStatement("select blockID, dnID, duplicationID from blockDuplication where fileName=?");
             statement.setString(1, fileName);
             ResultSet resultSet = statement.executeQuery();
             while(resultSet.next()){
@@ -144,7 +184,10 @@ public class MetaDataDao {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        }finally {
+        }catch (NullPointerException e) {
+            LOGGER.warning("Can't get database connection!");
+        }
+        finally {
             if(conn != null){
                 try {
                     conn.close();
@@ -154,5 +197,31 @@ public class MetaDataDao {
             }
         }
         return blockInfoList;
+    }
+
+    public boolean deleteFile(String fileName){
+        Connection conn = getConn();
+        try{
+            PreparedStatement statement1 = conn.prepareStatement("delete from blockDuplication where fileName=?");
+            PreparedStatement statement2 = conn.prepareStatement("delete from file_blockNum where fileName=?");
+            statement1.setString(1, fileName);
+            statement2.setString(1, fileName);
+            return statement1.execute() && statement2.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }catch (NullPointerException e) {
+            LOGGER.warning("Can't get database connection!");
+            return false;
+        }
+        finally {
+            if(conn != null){
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 }

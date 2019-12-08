@@ -25,7 +25,8 @@ DROP TABLE IF EXISTS `blockDuplication`;
 CREATE TABLE `blockDuplication` (
   `blockID` int(32) NOT NULL,
   `dnID` varchar(32) NOT NULL,
-  `duplicationID` int(32) NOT NULL
+  `duplicationID` int(32) NOT NULL,
+  `fileName` varchar(32) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -36,28 +37,6 @@ CREATE TABLE `blockDuplication` (
 LOCK TABLES `blockDuplication` WRITE;
 /*!40000 ALTER TABLE `blockDuplication` DISABLE KEYS */;
 /*!40000 ALTER TABLE `blockDuplication` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `file_block`
---
-
-DROP TABLE IF EXISTS `file_block`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `file_block` (
-  `fileName` varchar(32) NOT NULL,
-  `blockId` int(32) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `file_block`
---
-
-LOCK TABLES `file_block` WRITE;
-/*!40000 ALTER TABLE `file_block` DISABLE KEYS */;
-/*!40000 ALTER TABLE `file_block` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -78,6 +57,10 @@ CREATE TABLE `file_blockNum` (
 -- Dumping data for table `file_blockNum`
 --
 
+LOCK TABLES `file_blockNum` WRITE;
+/*!40000 ALTER TABLE `file_blockNum` DISABLE KEYS */;
+/*!40000 ALTER TABLE `file_blockNum` ENABLE KEYS */;
+UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -88,4 +71,4 @@ CREATE TABLE `file_blockNum` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2019-12-03 22:02:00
+-- Dump completed on 2019-12-08 11:26:07

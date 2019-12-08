@@ -33,17 +33,13 @@ public class NNApp {
             @Override
             public void run(){
                 try {
-//                    while (true) {
-//                        shallRestart = false;
-//                        server.start();
-//                        while (!shallRestart){
-//                            Thread.sleep(100);
-//                        }
-//                    }
-                    int port = PropertiesReader.getPropertyAsInt("nameNode.port");
-
-                    port = port < 0 ? 8980 : port;
-                    new NameNodeServer(port, latch).start();
+                    while (true) {
+                        shallRestart = false;
+                        server.start();
+                        while (!shallRestart){
+                            Thread.sleep(100);
+                        }
+                    }
                 } catch (IOException | InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -68,68 +64,67 @@ public class NNApp {
 
         Scanner scanner = new Scanner(System.in);
         scanner.nextLine();
-        divider.uploadFile("dataNode/src/main/resources/uploadTest/video");
-//        while (true) {
-//            String order = scanner.nextLine();
-//            String[] words = order.split(" ");
-//
-//            if(words.length == 1){
-//                switch (order){
-//                    case "help":
-//                        break;
-//                    case "restart":
-//                        server.stop();
-//                        //serverThread.interrupt();
-//                        LOGGER.info("Server restarting...");
-//                        while (!server.isTerminated()){
-//                            try {
-//                                Thread.sleep(100);
-//                            } catch (InterruptedException e) {
-//                                e.printStackTrace();
-//                            }
-//                        }
-//                        server = new NameNodeServer(port, latch);
-//                        shallRestart = true;
-//                        break;
-//                    default:
-//                        LOGGER.warning("Unrecognized command!");
-//                }
-//            }else if(words.length > 1){
-//                switch (words[0]){
-//                    case "upload":
-//                        if(words.length != 2){
-//                            LOGGER.warning("Unrecognized command!");
-//                        }else {
-//                            divider.uploadFile(words[1]);
-//                        }
-//                        break;
-//                    case "download":
-//                        if(words.length != 3){
-//                            LOGGER.warning("Unrecognized command!");
-//                        }else {
-//                            divider.downloadFile(words[1], words[2]);
-//                        }
-//                        break;
-//                    case "delete":
-//                        if(words.length != 2){
-//                            LOGGER.warning("Unrecognized command!");
-//                        }else {
-//                            divider.deleteFile(words[1]);
-//                        }
-//                        break;
-//                    case "append":
-//                        if(words.length == 4 && words[1].equals("-f")){
-//                            divider.appendFileWithFile(words[2], words[3]);
-//                            break;
-//                        }
-//                        if(words.length >= 4 && words[1].equals("-s")){
-//                            divider.appendFileWithString(words[2], order.substring(10 + words[2].length(), order.length()));
-//                            break;
-//                        }
-//                        LOGGER.warning("Unrecognized command!");
-//                        break;
-//                }
-//            }
-//        }
+        while (true) {
+            String order = scanner.nextLine();
+            String[] words = order.split(" ");
+
+            if(words.length == 1){
+                switch (order){
+                    case "help":
+                        break;
+                    case "restart":
+                        server.stop();
+                        //serverThread.interrupt();
+                        LOGGER.info("Server restarting...");
+                        while (!server.isTerminated()){
+                            try {
+                                Thread.sleep(100);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        server = new NameNodeServer(port, latch);
+                        shallRestart = true;
+                        break;
+                    default:
+                        LOGGER.warning("Unrecognized command!");
+                }
+            }else if(words.length > 1){
+                switch (words[0]){
+                    case "upload":
+                        if(words.length != 2){
+                            LOGGER.warning("Unrecognized command!");
+                        }else {
+                            divider.uploadFile(words[1]);
+                        }
+                        break;
+                    case "download":
+                        if(words.length != 3){
+                            LOGGER.warning("Unrecognized command!");
+                        }else {
+                            divider.downloadFile(words[1], words[2]);
+                        }
+                        break;
+                    case "delete":
+                        if(words.length != 2){
+                            LOGGER.warning("Unrecognized command!");
+                        }else {
+                            divider.deleteFile(words[1]);
+                        }
+                        break;
+                    case "append":
+                        if(words.length == 4 && words[1].equals("-f")){
+                            divider.appendFileWithFile(words[2], words[3]);
+                            break;
+                        }
+                        if(words.length >= 4 && words[1].equals("-s")){
+                            divider.appendFileWithString(words[2], order.substring(10 + words[2].length(), order.length()));
+                            break;
+                        }
+                        LOGGER.warning("Unrecognized command!");
+                        break;
+                }
+            }
+        }
     }
 }

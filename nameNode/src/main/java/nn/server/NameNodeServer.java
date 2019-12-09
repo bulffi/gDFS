@@ -7,6 +7,7 @@ import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
 import nn.dao.MetaDataDao;
 import nn.util.DataNodeRecorder;
+import nn.util.FileOperator;
 
 import java.io.IOException;
 import java.util.Date;
@@ -21,6 +22,7 @@ public class NameNodeServer {
     private final CountDownLatch mainThreadLatch;
     private final DataNodeRecorder recorder;
     private final MetaDataDao dao;
+    private FileOperator fileOperator;
 
     public NameNodeServer(ServerBuilder<?> serverBuilder, int port, CountDownLatch latch){
         this.port = port;
@@ -28,6 +30,7 @@ public class NameNodeServer {
         server = serverBuilder.addService(new Master()).build();
         recorder = new DataNodeRecorder();
         dao = new MetaDataDao();
+        fileOperator = new FileOperator();
     }
 
     public NameNodeServer(int port, CountDownLatch latch){
@@ -36,7 +39,7 @@ public class NameNodeServer {
 
     public void start() throws IOException, InterruptedException {
         server.start();
-        logger.info("server started, listening on port:" + port);
+        logger.info("Namenode server started, listening on port:" + port);
         Runtime.getRuntime().addShutdownHook(new Thread(){
             @Override
             public void run(){
@@ -120,6 +123,19 @@ public class NameNodeServer {
                     responseObserver.onCompleted();
                 }
             };
+        }
+
+        @Override
+        public void readTable(com.f4.proto.nn.TableName request, StreamObserver<com.f4.proto.nn.TableContent> responseObserver) {
+            String content = fileOperator.readFile(request.getName());
+            responseObserver.onNext(TableContent.newBuilder().setContent(content).build());
+            responseObserver.onCompleted();
+        }
+
+        @Override
+        public void updateTable(com.f4.proto.nn.Table request, StreamObserver<com.f4.proto.nn.Status> responseObserver) {
+            fileOperator.updateFile(request.getName(), request.getContent());
+            responseObserver.onNext(Status.newBuilder().build());
         }
     }
 }

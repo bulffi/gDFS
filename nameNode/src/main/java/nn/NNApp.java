@@ -5,11 +5,7 @@ import nn.util.DataNodeRecorder;
 import nn.util.FileOperator;
 import nn.util.PropertiesReader;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Logger;
@@ -18,8 +14,9 @@ public class NNApp {
     private static final Logger LOGGER = Logger.getLogger(NNApp.class.getName());
     private static NameNodeServer server;
     private static boolean shallRestart = false;
+    private static boolean shallStop=false;
     public static void main(String[] args){
-        FileOperator divider = new FileOperator();
+        FileOperator fileOperator = new FileOperator();
         // 防止主线程退出
         final CountDownLatch latch = new CountDownLatch(1);
 
@@ -36,6 +33,9 @@ public class NNApp {
                     while (true) {
                         shallRestart = false;
                         server.start();
+                        if(shallStop){
+                            return;
+                        }
                         while (!shallRestart){
                             Thread.sleep(100);
                         }
@@ -47,34 +47,45 @@ public class NNApp {
         };
         serverThread.start();
 
-//        new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                DataNodeRecorder recorder = new DataNodeRecorder();
-//                while(true){
-//                    recorder.checkForDead();
-//                    try {
-//                        Thread.sleep(1000);
-//                    } catch (InterruptedException e) {
-//                        e.printStackTrace();
-//                    }
-//                }
-//            }
-//        }).start();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                DataNodeRecorder recorder = new DataNodeRecorder();
+                while(true){
+                    recorder.checkForDead();
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }).start();
 
         Scanner scanner = new Scanner(System.in);
-        scanner.nextLine();
         while (true) {
+            System.out.print(">");
             String order = scanner.nextLine();
             String[] words = order.split(" ");
 
             if(words.length == 1){
                 switch (order){
+                    case "exit":
+                        shallStop=true;
+                        server.stop();
+                        return;
                     case "help":
+                        System.out.print("Usage:\n" +
+                                "上传文件：upload 文件名\n" +
+                                "下载文件：download 文件名 下载地址\n" +
+                                "删除文件：delete 文件名\n" +
+                                "追加内容：append -f 文件名 追加文件路径\n" +
+                                "         append -s 文件名 追加的字符串内容\n" +
+                                "退出：exit\n" +
+                                "重启：restart\n");
                         break;
                     case "restart":
                         server.stop();
-                        //serverThread.interrupt();
                         LOGGER.info("Server restarting...");
                         while (!server.isTerminated()){
                             try {
@@ -95,30 +106,30 @@ public class NNApp {
                         if(words.length != 2){
                             LOGGER.warning("Unrecognized command!");
                         }else {
-                            divider.uploadFile(words[1]);
+                            fileOperator.uploadFile(words[1]);
                         }
                         break;
                     case "download":
                         if(words.length != 3){
                             LOGGER.warning("Unrecognized command!");
                         }else {
-                            divider.downloadFile(words[1], words[2]);
+                            fileOperator.downloadFile(words[1], words[2]);
                         }
                         break;
                     case "delete":
                         if(words.length != 2){
                             LOGGER.warning("Unrecognized command!");
                         }else {
-                            divider.deleteFile(words[1]);
+                            fileOperator.deleteFile(words[1]);
                         }
                         break;
                     case "append":
                         if(words.length == 4 && words[1].equals("-f")){
-                            divider.appendFileWithFile(words[2], words[3]);
+                            fileOperator.appendFileWithFile(words[2], words[3]);
                             break;
                         }
                         if(words.length >= 4 && words[1].equals("-s")){
-                            divider.appendFileWithString(words[2], order.substring(10 + words[2].length(), order.length()));
+                            fileOperator.appendFileWithString(words[2], order.substring(10 + words[2].length(), order.length()));
                             break;
                         }
                         LOGGER.warning("Unrecognized command!");

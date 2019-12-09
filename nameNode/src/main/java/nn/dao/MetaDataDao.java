@@ -206,7 +206,9 @@ public class MetaDataDao {
             PreparedStatement statement2 = conn.prepareStatement("delete from file_blockNum where fileName=?");
             statement1.setString(1, fileName);
             statement2.setString(1, fileName);
-            return statement1.execute() && statement2.execute();
+            int r1 = statement1.executeUpdate();
+            int r2 = statement2.executeUpdate();
+            return true;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;

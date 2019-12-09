@@ -5,8 +5,6 @@ import nn.dao.MetaDataDao;
 import nn.message.BlockInfo;
 
 import java.io.*;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -123,20 +121,18 @@ public class FileOperator {
     public void appendFileWithString(String fileName, String content){
         int len = content.length();
         int start = 0;
-        while (start + blockSize <= len){
-            byte[] block = content.substring(start, start + blockSize).getBytes();
-            start = start + blockSize;
-        }
+        int index;
 
         if(!dao.checkExistence(fileName)){
-            LOGGER.warning("The file you want to append doesn't exist!");
-            return;
+            LOGGER.warning("The file you want to append doesn't exist, we will create it!");
+            index = 0;
+        }else {
+            index = dao.getFileBlockNum(fileName);
         }
 
         int actualDuplicationNum = getActualDuplicationNum();
 
         try {
-            int index = dao.getFileBlockNum(fileName);
             List<String> dns = recorder.getWriteDataNodes(actualDuplicationNum);
             while(start < len){
                 String dnToWrite = dns.get(0);
@@ -145,11 +141,17 @@ public class FileOperator {
                     byte[] tail = content.substring(start, len).getBytes();
                     client.writeToBlock(fileName, index, tail, dns);
                 }else {
+                    byte[] block = content.substring(start, start + blockSize).getBytes();
                     client.writeToBlock(fileName, index, block, dns);
                 }
+                start = start + blockSize;
                 index++;
             }
-            dao.updateFileBlockNum(fileName, index);
+            if(dao.checkExistence(fileName)) {
+                dao.updateFileBlockNum(fileName, index);
+            }else {
+                dao.insertFileBlockNum(fileName, index);
+            }
         } catch (NullPointerException e){
             e.printStackTrace();
             LOGGER.warning("Client can't be empty!");
@@ -161,6 +163,8 @@ public class FileOperator {
 
     public void appendFileWithFile(String fileName, String srcPath){
         File file = new File(srcPath);
+        int actualDuplicationNum = getActualDuplicationNum();
+        int index;
         if(!file.isFile()){
             LOGGER.warning(srcPath + " isn't a file!");
             return;
@@ -170,15 +174,16 @@ public class FileOperator {
             return;
         }
         if(!dao.checkExistence(fileName)){
-            LOGGER.warning("The file you want to append doesn't exist!");
-            return;
+            LOGGER.warning("The file you want to append doesn't exist, we will create it!");
+            index = 0;
+        }else {
+            index = dao.getFileBlockNum(fileName);
         }
 
-        int actualDuplicationNum = getActualDuplicationNum();
+
 
         try {
             BufferedInputStream buffer = new BufferedInputStream(new FileInputStream(file));
-            int index = dao.getFileBlockNum(fileName);
             int read = 0;
             List<String> dns = recorder.getWriteDataNodes(actualDuplicationNum);
             while((read = buffer.read(block)) != -1){
@@ -194,7 +199,11 @@ public class FileOperator {
                 index++;
             }
             buffer.close();
-            dao.updateFileBlockNum(file.getName(), index);
+            if(dao.checkExistence(fileName)) {
+                dao.updateFileBlockNum(fileName, index);
+            }else {
+                dao.insertFileBlockNum(fileName, index);
+            }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -203,6 +212,13 @@ public class FileOperator {
             e.printStackTrace();
             LOGGER.warning("Unknown errors!");
         }
+    }
+
+    public void updateFile(String fileName, String content){
+        if(dao.checkExistence(fileName)){
+            deleteFile(fileName);
+        }
+        appendFileWithString(fileName, content);
     }
 
     private int getActualDuplicationNum(){
@@ -216,6 +232,49 @@ public class FileOperator {
     }
 
     public void deleteFile(String fileName){
-        dao.deleteFile(fileName);
+        if(!dao.checkExistence(fileName)){
+            LOGGER.warning("No such file on gdfs!:");
+            return;
+        }
+        if(dao.deleteFile(fileName)) {
+            LOGGER.info("File deleted successfully!");
+        }else {
+            LOGGER.warning("We can't delete file " + fileName);
+        }
+    }
+
+    public String readFile(String srcPath){
+        List<BlockInfo> blockInfoList = dao.getAllFileBlocks(srcPath);
+        blockInfoList.sort(new Comparator<BlockInfo>() {
+            @Override
+            public int compare(BlockInfo blockInfo, BlockInfo t1) {
+                int delta =  (int)(blockInfo.getBlockID() - t1.getBlockID());
+                if(delta != 0){
+                    return delta;
+                }else {
+                    return new Random(new Date().getTime()).nextInt(3) - 1;
+                }
+            }
+        });
+        int blocks = dao.getFileBlockNum(srcPath);
+        int currentIndex = 0;
+        StringBuilder builder = new StringBuilder();
+        try {
+            for(int i = 0; i < blockInfoList.size(); i++){
+                BlockInfo blockInfo = blockInfoList.get(i);
+                if(blockInfo.getBlockID() == currentIndex){
+                    String peerString = DataNodeRecorder.getPeerInfoString(blockInfo.getDnID());
+                    byte[] block =recorder.getClient(peerString).readByID(blockInfo.getDuplicationID());
+                    LOGGER.info("Read block#" + i + " from " + peerString);
+                    String blockStr = new String(block);
+                    builder.append(blockStr);
+                    currentIndex++;
+                }
+            }
+        } catch (Exception e){
+            LOGGER.warning("Unkown errors from FileOperator");
+            e.printStackTrace();
+        }
+        return builder.toString();
     }
 }

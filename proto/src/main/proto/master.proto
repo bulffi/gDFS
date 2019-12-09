@@ -17,6 +17,9 @@ service Master{
     rpc reportDataDeleteStatus(DeleteReportRequest) returns (DeleteReportReply) {}
 
     rpc heartBeat(stream HeartBeatInfo) returns (NullReply) {}
+
+    rpc readTable(TableName) returns (TableContent){}
+    rpc updateTable(Table) returns (Status) {}
 }
 
 message HeartBeatInfo{
@@ -68,4 +71,23 @@ message RegisterResponse{
 
 message RegisterRequest{
     PeerInfo peer = 1;
+}
+
+message Status{
+    int32 status = 1;
+    // 0 失败
+    // 1 成功
+}
+
+message Table{
+    string content = 1;
+    string name = 2;
+}
+
+message TableName{
+    string name = 1;
+}
+
+message TableContent{
+    string content = 1;
 }

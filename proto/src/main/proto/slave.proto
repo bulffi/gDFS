@@ -23,7 +23,7 @@ message DeleteBlockRequest{
     repeated DeleteInfo nodesToDelete = 1;
 }
 message DeleteInfo{
-    string ip = 1;
+    PeerInfo ip = 1;
     repeated int64 blockID = 2;
 }
 message DeleteBlockReply{}

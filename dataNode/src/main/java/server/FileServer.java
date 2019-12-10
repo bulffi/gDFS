@@ -211,7 +211,6 @@ public class FileServer {
         }
         logger.info("There is already " + max +" blocks in the data dir. Start from block #" + (max+1)) ;
         availableBlockID = new AtomicLong(max + 1);
-
     }
 
     private boolean addPeer(PeerInfo p) {
@@ -396,8 +395,8 @@ public class FileServer {
                                     StreamObserver<DeleteBlockReply> responseObserver) {
             try {
                 logger.info("I am deleting block # " + request.getNodesToDeleteList().get(0).getBlockIDList());
-                if(!request.getNodesToDelete(0).getIp().equals(ip)){
-                    logger.error("This is not my turn! My ip is not " + request.getNodesToDelete(0).getIp());
+                if(!request.getNodesToDelete(0).getIp().getIP().equals(ip)){
+                    logger.error("This is not my turn! My ip is not " + request.getNodesToDelete(0).getIp().getIP());
                     return;
                 }
             }catch (IndexOutOfBoundsException e){
@@ -442,20 +441,20 @@ public class FileServer {
             }
             if(deleteInfoList.size()>1){
                 deleteInfoList.remove(0);
-                logger.info("Passing to the next peer at " + deleteInfoList.get(0).getIp());
+                logger.info("Passing to the next peer at " + deleteInfoList.get(0).getIp().getIP());
 
                 for (Peer p : peers) {
-                    if(p.getIp().equals(deleteInfoList.get(0).getIp())){
+                    if(p.getIp().equals(deleteInfoList.get(0).getIp().getIP())){
                         DeleteBlockRequest.Builder requestBuilder = DeleteBlockRequest.newBuilder();
-                        for (int i = 0; i < deleteInfoList.size(); i++) {
-                            requestBuilder.setNodesToDelete(i,deleteInfoList.get(i));
+                        for (DeleteInfo deleteInfo : deleteInfoList) {
+                            requestBuilder.addNodesToDelete(deleteInfo);
                         }
                         DeleteBlockReply peerReply = p.getStub().deleteBlockByID(requestBuilder.build());
                         logger.info("My delete is done and has passed to the next peer");
                         return;
                     }
                 }
-                logger.error("Next peer at: " + deleteInfoList.get(0).getIp() + "is not registered!");
+                logger.error("Next peer at: " + deleteInfoList.get(0).getIp().getIP() + " is not registered!");
             }else {
                 logger.info("My delete is done and I am the last one to delete");
             }

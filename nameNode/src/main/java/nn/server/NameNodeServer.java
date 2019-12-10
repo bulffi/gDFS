@@ -136,6 +136,7 @@ public class NameNodeServer {
         public void updateTable(com.f4.proto.nn.Table request, StreamObserver<com.f4.proto.nn.Status> responseObserver) {
             fileOperator.updateFile(request.getName(), request.getContent());
             responseObserver.onNext(Status.newBuilder().build());
+            responseObserver.onCompleted();
         }
     }
 }

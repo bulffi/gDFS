@@ -5,6 +5,7 @@ import com.google.protobuf.ByteString;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
+import nn.message.BlockInfo;
 import nn.util.DataNodeRecorder;
 
 import java.util.List;
@@ -63,5 +64,13 @@ public class FileOperationClient {
             logger.warning(e.toString());
         }
         return new byte[]{};
+    }
+
+    public void deleteFile(List<BlockInfo> blockInfos){
+        DeleteBlockRequest.Builder builder = DeleteBlockRequest.newBuilder();
+        for (BlockInfo blockInfo:blockInfos
+             ) {
+            //builder.addNodesToDelete(DeleteInfo.newBuilder().setBlockID(blockInfo.getDuplicationID()))
+        }
     }
 }

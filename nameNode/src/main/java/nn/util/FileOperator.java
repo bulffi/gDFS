@@ -1,5 +1,6 @@
 package nn.util;
 
+import com.f4.proto.common.PeerInfo;
 import nn.client.FileOperationClient;
 import nn.dao.MetaDataDao;
 import nn.message.BlockInfo;
@@ -232,9 +233,16 @@ public class FileOperator {
     }
 
     public void deleteFile(String fileName){
-        if(!dao.checkExistence(fileName)){
-            LOGGER.warning("No such file on gdfs!:");
+      if(!dao.checkExistence(fileName)){
+            LOGGER.warning("No such file on gdfs!:" + fileName);
             return;
+        }
+        try {
+            List<BlockInfo> blockInfoList = dao.getAllFileBlocks(fileName);
+            String first = DataNodeRecorder.getPeerInfoString(blockInfoList.get(0).getDnID());
+            recorder.getClient(first).deleteFile(blockInfoList);
+        }catch (NullPointerException e){
+
         }
         if(dao.deleteFile(fileName)) {
             LOGGER.info("File deleted successfully!");

@@ -403,7 +403,8 @@ public class FileServer {
                 logger.error("The delete list is empty. My previous one has done sth wrong" + e.getLocalizedMessage());
                 return;
             }
-            List<DeleteInfo> deleteInfoList = request.getNodesToDeleteList();
+            List<DeleteInfo> temptDeleteInfoList = request.getNodesToDeleteList();
+            List<DeleteInfo> deleteInfoList = new ArrayList<>(temptDeleteInfoList);
             List<BlockIDWrapper> blockIDWrapperList = request.getNodesToDeleteList().get(0).getBlockIDList();
             List<Long> blockIDToDelete = new ArrayList<>();
             for (BlockIDWrapper w :

@@ -5,6 +5,7 @@ import nn.message.BlockInfo;
 import nn.util.DataNodeRecorder;
 import nn.util.PropertiesReader;
 
+import javax.swing.plaf.nimbus.State;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -225,5 +226,20 @@ public class MetaDataDao {
                 }
             }
         }
+    }
+
+    public List<String> getAllFiles(){
+        Connection conn = getConn();
+        List<String> files = new ArrayList<>();
+        try {
+            Statement stat = conn.createStatement();
+            ResultSet resultSet = stat.executeQuery("select distinct fileName from file_blockNum");
+            while(resultSet.next()){
+                files.add(resultSet.getString("fileName"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return files;
     }
 }

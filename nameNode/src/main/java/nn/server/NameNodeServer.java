@@ -99,7 +99,8 @@ public class NameNodeServer {
 
         @Override
         public void reportDataDeleteStatus(DeleteReportRequest request, StreamObserver<DeleteReportReply> responseObserver) {
-
+            responseObserver.onNext(DeleteReportReply.newBuilder().setStatus(0).build());
+            responseObserver.onCompleted();
         }
 
         @Override

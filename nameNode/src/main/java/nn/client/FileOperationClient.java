@@ -102,5 +102,7 @@ public class FileOperationClient {
                 head = blockInfo;
             }
         }
+        dbrBuilder.addNodesToDelete(diBuilder.build());
+        blockingStub.deleteBlockByID(dbrBuilder.build());
     }
 }

@@ -6,6 +6,7 @@ import nn.util.FileOperator;
 import nn.util.PropertiesReader;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Logger;
@@ -64,7 +65,7 @@ public class NNApp {
 
         Scanner scanner = new Scanner(System.in);
         while (true) {
-            System.out.print(">");
+            System.out.print("gdfs>");
             String order = scanner.nextLine();
             String[] words = order.split(" ");
 
@@ -81,6 +82,7 @@ public class NNApp {
                                 "删除文件：delete 文件名\n" +
                                 "追加内容：append -f 文件名 追加文件路径\n" +
                                 "         append -s 文件名 追加的字符串内容\n" +
+                                "列出所有文件：list\n" +
                                 "退出：exit\n" +
                                 "重启：restart\n");
                         break;
@@ -96,6 +98,13 @@ public class NNApp {
                         }
                         server = new NameNodeServer(port, latch);
                         shallRestart = true;
+                        break;
+                    case "list":
+                        List<String> files = fileOperator.getAllFiles();
+                        for (String file:files
+                             ) {
+                            System.out.println(file);
+                        }
                         break;
                     default:
                         LOGGER.warning("Unrecognized command!");
@@ -129,7 +138,7 @@ public class NNApp {
                             break;
                         }
                         if(words.length >= 4 && words[1].equals("-s")){
-                            fileOperator.appendFileWithString(words[2], order.substring(10 + words[2].length(), order.length()));
+                            fileOperator.appendFileWithString(words[2], order.substring(11 + words[2].length(), order.length()));
                             break;
                         }
                         LOGGER.warning("Unrecognized command!");

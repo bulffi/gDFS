@@ -82,6 +82,7 @@ public class FileOperator {
 
     public void downloadFile(String srcPath, String desPath){
         List<BlockInfo> blockInfoList = dao.getAllFileBlocks(srcPath);
+        long seed = new Date().getTime();
         blockInfoList.sort(new Comparator<BlockInfo>() {
             @Override
             public int compare(BlockInfo blockInfo, BlockInfo t1) {
@@ -89,7 +90,7 @@ public class FileOperator {
                 if(delta != 0){
                     return delta;
                 }else {
-                    return new Random(new Date().getTime()).nextInt(3) - 1;
+                    return new Random(seed).nextInt(120) / 40 - 1;
                 }
             }
         });
@@ -102,11 +103,12 @@ public class FileOperator {
                 if(blockInfo.getBlockID() == currentIndex){
                     String peerString = DataNodeRecorder.getPeerInfoString(blockInfo.getDnID());
                     byte[] test =recorder.getClient(peerString).readByID(blockInfo.getDuplicationID());
-                    LOGGER.info("Read block#" + i + " from " + peerString);
+                    LOGGER.info("Read block#" + currentIndex + " from " + peerString);
                     buffer.write(test);
                     currentIndex++;
                 }
             }
+            LOGGER.info("File download successfully!");
             buffer.flush();
             buffer.close();
         } catch (FileNotFoundException e) {
@@ -284,5 +286,9 @@ public class FileOperator {
             e.printStackTrace();
         }
         return builder.toString();
+    }
+
+    public List<String> getAllFiles(){
+        return dao.getAllFiles();
     }
 }

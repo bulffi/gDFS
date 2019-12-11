@@ -404,7 +404,12 @@ public class FileServer {
                 return;
             }
             List<DeleteInfo> deleteInfoList = request.getNodesToDeleteList();
-            List<Long> blockIDToDelete = request.getNodesToDeleteList().get(0).getBlockIDList();
+            List<BlockIDWrapper> blockIDWrapperList = request.getNodesToDeleteList().get(0).getBlockIDList();
+            List<Long> blockIDToDelete = new ArrayList<>();
+            for (BlockIDWrapper w :
+                    blockIDWrapperList) {
+                blockIDToDelete.add(w.getBlockID());
+            }
             List<Long> successIDs = new ArrayList<>();
             for(long id:blockIDToDelete){
                 File file = new File(BLOCK_PATH + id);

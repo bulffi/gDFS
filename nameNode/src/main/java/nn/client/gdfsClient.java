@@ -33,8 +33,8 @@ public class gdfsClient {
 
     public static void main(String[] args){
         gdfsClient client = new gdfsClient("localhost", 8980);
-        //client.upload("hiveTest", "DDSKJLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLF");
-        String tes = client.read("hiveTest");
+        client.upload("hiveTest", "DDSKJLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLF");
+        //String tes = client.read("hiveTest");
     }
 
     void upload(String name, String content){

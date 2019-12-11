@@ -24,8 +24,13 @@ message DeleteBlockRequest{
 }
 message DeleteInfo{
     PeerInfo ip = 1;
-    repeated int64 blockID = 2;
+    repeated BlockIDWrapper blockID = 2;
 }
+
+message BlockIDWrapper{
+    int64 blockID = 1;
+}
+
 message DeleteBlockReply{}
 
 message DataNodeReply{

@@ -242,7 +242,7 @@ public class FileOperator {
             String first = DataNodeRecorder.getPeerInfoString(blockInfoList.get(0).getDnID());
             recorder.getClient(first).deleteFile(blockInfoList);
         }catch (NullPointerException e){
-
+            e.printStackTrace();
         }
         if(dao.deleteFile(fileName)) {
             LOGGER.info("File deleted successfully!");

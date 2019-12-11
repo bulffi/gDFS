@@ -8,6 +8,7 @@ import io.grpc.StatusRuntimeException;
 import nn.message.BlockInfo;
 import nn.util.DataNodeRecorder;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -67,10 +68,39 @@ public class FileOperationClient {
     }
 
     public void deleteFile(List<BlockInfo> blockInfos){
-        DeleteBlockRequest.Builder builder = DeleteBlockRequest.newBuilder();
+        DeleteBlockRequest.Builder dbrBuilder = DeleteBlockRequest.newBuilder();
+        DeleteInfo.Builder diBuilder = DeleteInfo.newBuilder();
+        BlockInfo head = blockInfos.get(0);
+
+        diBuilder.setIp(head.getDnID());
+
+        blockInfos.sort(new Comparator<BlockInfo>() {
+            @Override
+            public int compare(BlockInfo blockInfo, BlockInfo t1) {
+                String ip1 = blockInfo.getDnID().getIP();
+                String ip2 = t1.getDnID().getIP();
+                int port1 =blockInfo.getDnID().getPort();
+                int port2 = t1.getDnID().getPort();
+
+                int result = ip1.compareTo(ip2);
+                if(result == 0){
+                    return port1 - port2;
+                }else {
+                    return result;
+                }
+            }
+        });
         for (BlockInfo blockInfo:blockInfos
              ) {
-            //builder.addNodesToDelete(DeleteInfo.newBuilder().setBlockID(blockInfo.getDuplicationID()))
+            if(blockInfo.getDnID().equals(head.getDnID())){
+                diBuilder.addBlockID(BlockIDWrapper.newBuilder().setBlockID(blockInfo.getDuplicationID()).build());
+            }else {
+                dbrBuilder.addNodesToDelete(diBuilder.build());
+                diBuilder = DeleteInfo.newBuilder();
+                diBuilder.addBlockID(BlockIDWrapper.newBuilder().setBlockID(blockInfo.getDuplicationID()).build());
+                diBuilder.setIp(blockInfo.getDnID());
+                head = blockInfo;
+            }
         }
     }
 }
